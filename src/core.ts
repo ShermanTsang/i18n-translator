@@ -46,4 +46,11 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
   return keys
 }
 
-export default { extractTranslationKeys }
+export function transformArrayToObject(keys: string[]) {
+  return keys.reduce((acc, key) => {
+    acc[key] = key
+    return acc
+  }, {})
+}
+
+export default { extractTranslationKeys, transformArrayToJson: transformArrayToObject }

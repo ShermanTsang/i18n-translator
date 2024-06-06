@@ -3,7 +3,7 @@ import * as path from 'node:path'
 import { cwd } from 'node:process'
 import prompts from 'prompts'
 import chalk from 'chalk'
-import { extractTranslationKeys } from './core'
+import { extractTranslationKeys, transformArrayToObject } from './core'
 import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from './utils'
 
 (async () => {
@@ -111,13 +111,15 @@ import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from '.
         allKeys = allKeys.concat(keys)
       }
       const sortedKeys = allKeys.sort()
+      console.log(`${chalk.bgGreen.white(' Resulting ')} Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`)
+
+      const objectContent = transformArrayToObject(sortedKeys)
 
       try {
         if (!isDirectoryExists(path.dirname(outputPath))) {
           fs.mkdirSync(path.dirname(outputPath), { recursive: true })
         }
-        fs.writeFileSync(outputPath, JSON.stringify(sortedKeys, null, 2))
-        console.log(`${chalk.bgGreen.white(' Resulting ')} Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`)
+        fs.writeFileSync(outputPath, JSON.stringify(objectContent, null, 2))
         console.log(`${chalk.bgGreen.white(' Saving ')} Extracted keys saved to ${chalk.underline.yellow(outputPath)}`)
       }
       catch (error) {
