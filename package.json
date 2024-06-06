@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "author": "ShermanT",
   "main": "src/index.ts",
+  "type": "module",
   "devDependencies": {
     "@antfu/eslint-config": "^2.20.0",
     "@types/node": "^20.14.2",
@@ -14,9 +15,11 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "bun build ./src/index.ts --outdir ./.output --target node"
+    "build": "bun build ./src/index.ts --outdir ./.output/build --target node"
   },
-  "type": "module",
+  "bin": {
+    "translation-generator": "bin/index.js"
+  },
   "dependencies": {
     "chalk": "^5.3.0",
     "prompts": "^2.4.2"
