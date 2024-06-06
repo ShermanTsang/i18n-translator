@@ -1,5 +1,5 @@
 {
-  "name": "translation-generator",
+  "name": "trans-generator",
   "version": "1.0.0",
   "author": "ShermanT",
   "main": "src/index.ts",
