@@ -7,6 +7,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^2.20.0",
     "@types/node": "^20.14.2",
+    "@types/prompts": "^2.4.9",
     "eslint": "^9.4.0",
     "eslint-plugin-format": "^0.1.1"
   },

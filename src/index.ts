@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { cwd } from 'node:process'
-import prompts from 'prompts'
+import * as prompts from 'prompts'
 import chalk from 'chalk'
 import { extractTranslationKeys, transformArrayToObject } from './core'
 import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from './utils'
@@ -41,12 +41,12 @@ import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from '.
       message: 'Would you prefer to extract keys from specified files or all files?',
       choices: [
         { title: 'all', value: 'all' },
-        { title: 'specified', value: 'specified' },
+        { title: 'specifiedExtension', value: 'specifiedExtension' },
       ],
-      default: 'all',
+      initial: 'all',
     },
     {
-      type: (prev: 'all' | 'specified') => prev === 'specified' ? 'autocompleteMultiselect' : null,
+      type: (prev: 'all' | 'specifiedExtension') => prev === 'specifiedExtension' ? 'autocompleteMultiselect' : null,
       name: 'specifiedFileExt',
       message: 'Select the file extensions to extract keys from',
       choices: [
@@ -83,7 +83,6 @@ import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from '.
         { title: '.lua', value: '.lua' },
         { title: '.sql', value: '.sql' },
       ],
-      initial: 'all',
     },
     {
       name: 'outputPath',
