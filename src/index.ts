@@ -1,16 +1,17 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { cwd } from 'node:process'
-import * as prompts from 'prompts'
+import type { PromptObject } from 'prompts'
+import prompts from 'prompts'
 import chalk from 'chalk'
 import { extractTranslationKeys, transformArrayToObject } from './core'
-import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from './utils'
+import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories, isDirectoryExists } from './utils'
 
 (async () => {
   const currentDirectory = cwd()
   const subdirectories = getSubdirectories(currentDirectory)
 
-  const { pattern, directories, fileExtType, specifiedFileExt, outputPath } = await prompts([
+  const questions: PromptObject<string>[] = [
     {
       type: 'text',
       name: 'pattern',
@@ -36,53 +37,22 @@ import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from '.
       min: 1,
     },
     {
-      type: 'select',
-      name: 'fileExtType',
-      message: 'Would you prefer to extract keys from specified files or all files?',
-      choices: [
-        { title: 'all', value: 'all' },
-        { title: 'specifiedExtension', value: 'specifiedExtension' },
-      ],
-      initial: 'all',
-    },
-    {
-      type: (prev: 'all' | 'specifiedExtension') => prev === 'specifiedExtension' ? 'autocompleteMultiselect' : null,
+      type: 'autocompleteMultiselect',
       name: 'specifiedFileExt',
       message: 'Select the file extensions to extract keys from',
-      choices: [
-        { title: '.js', value: '.js' },
-        { title: '.ts', value: '.ts' },
-        { title: '.jsx', value: '.jsx' },
-        { title: '.tsx', value: '.tsx' },
-        { title: '.vue', value: '.vue' },
-        { title: '.html', value: '.html' },
-        { title: '.txt', value: '.txt' },
-        { title: '.py', value: '.py' },
-        { title: '.css', value: '.css' },
-        { title: '.scss', value: '.scss' },
-        { title: '.json', value: '.json' },
-        { title: '.xml', value: '.xml' },
-        { title: '.md', value: '.md' },
-        { title: '.yml', value: '.yml' },
-        { title: '.ini', value: '.ini' },
-        { title: '.sh', value: '.sh' },
-        { title: '.bat', value: '.bat' },
-        { title: '.rb', value: '.rb' },
-        { title: '.php', value: '.php' },
-        { title: '.java', value: '.java' },
-        { title: '.c', value: '.c' },
-        { title: '.cpp', value: '.cpp' },
-        { title: '.cs', value: '.cs' },
-        { title: '.go', value: '.go' },
-        { title: '.rs', value: '.rs' },
-        { title: '.swift', value: '.swift' },
-        { title: '.kt', value: '.kt' },
-        { title: '.dart', value: '.dart' },
-        { title: '.r', value: '.r' },
-        { title: '.pl', value: '.pl' },
-        { title: '.lua', value: '.lua' },
-        { title: '.sql', value: '.sql' },
-      ],
+      choices: (directories: string[]) => {
+        const extensionStatistics = getFileExtensionStatistics(directories)
+        const totalFiles = Object.values(extensionStatistics).reduce((acc, curr) => acc + curr, 0)
+        return Object.keys(extensionStatistics).map((ext) => {
+          const stat = chalk.gray(`${extensionStatistics[ext]} count(s) / ${(extensionStatistics[ext] / totalFiles * 100).toFixed(2)}%`)
+          return {
+            title: `${ext}  ${stat}`,
+            value: ext,
+            selected: true,
+            disabled: extensionStatistics[ext] === 0,
+          }
+        })
+      },
     },
     {
       name: 'outputPath',
@@ -96,16 +66,19 @@ import { createRegexFromTemplate, getSubdirectories, isDirectoryExists } from '.
         return value.includes('.')
       },
     },
-  ])
+  ]
+  const { pattern, directories, specifiedFileExt, outputPath } = await prompts(questions)
 
   if (directories?.length > 0) {
     try {
-      let allKeys = []
+      let allKeys: string[] = []
       for (const directoryPath of directories) {
+        console.log(`${chalk.white.bgBlue(' Setting ')} Use RegExp ${chalk.underline.yellow(pattern)} to match`)
+        console.log(`${chalk.green(String('-').repeat(40))}`)
         const keys = await extractTranslationKeys(
           pattern,
           directoryPath,
-          fileExtType === 'specified' ? specifiedFileExt : [],
+          specifiedFileExt,
         )
         allKeys = allKeys.concat(keys)
       }

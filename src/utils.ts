@@ -8,6 +8,34 @@ export function getSubdirectories(directory: fs.PathLike) {
     .map(entry => entry.name)
 }
 
+export function getFileExtensionStatistics(directories: fs.PathLike[]) {
+  const extensionStatistic: Record<string, number> = {}
+
+  function traverseDirectory(directory: fs.PathLike) {
+    const entries = fs.readdirSync(directory, { withFileTypes: true })
+    entries.forEach((item) => {
+      const fullPath = path.join(directory.toString(), item.name)
+      if (item.isFile()) {
+        const extension = path.extname(item.name)
+        if (extension) {
+          extensionStatistic[extension] = (extensionStatistic[extension] || 0) + 1
+        }
+      }
+      else if (item.isDirectory()) {
+        traverseDirectory(fullPath)
+      }
+    })
+  }
+
+  directories.forEach((directory) => {
+    traverseDirectory(directory)
+  })
+
+  return Object.fromEntries(
+    Object.entries(extensionStatistic).sort(([, a], [, b]) => b - a),
+  )
+}
+
 export function isDirectoryExists(directory: string) {
   try {
     fs.access(directory, fs.constants.F_OK | fs.constants.R_OK | fs.constants.W_OK, (err) => {
@@ -34,7 +62,7 @@ export function createDirectory(targetPath: string) {
   }
 }
 
-export function createRegexFromTemplate(template) {
+export function createRegexFromTemplate(template: string) {
   const escapedTemplate = template.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
   const regexString = escapedTemplate.replace(/%key%/g, '([^\'\"\`]+)')
   return new RegExp(regexString, 'g')
