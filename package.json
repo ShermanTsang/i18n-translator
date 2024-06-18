@@ -1,26 +1,29 @@
 {
   "name": "@shermant/translation-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "ShermanT",
-  "main": "src/index.ts",
+  "main": ".output/dist/index.js",
+  "types": ".output/dist/index.d.ts",
   "type": "module",
+  "description": "",
+  "homepage": "",
+  "license": "ISC",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
+  },
+  "bin": {
+    "translation-generator": "bin/index.js"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^2.20.0",
     "@types/bun": "^1.1.4",
     "@types/node": "^20.14.2",
     "@types/prompts": "^2.4.9",
     "eslint": "^9.4.0",
-    "eslint-plugin-format": "^0.1.1"
-  },
-  "description": "",
-  "license": "ISC",
-  "scripts": {
-    "start": "bun run src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "bun build ./src/index.ts --outdir ./.output/build --target node"
-  },
-  "bin": {
-    "translation-generator": "bin/index.js"
+    "eslint-plugin-format": "^0.1.1",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "chalk": "^5.3.0",
