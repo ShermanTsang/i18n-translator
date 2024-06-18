@@ -1,18 +1,19 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import chalk from 'chalk'
+import { Logger } from './log'
 
 async function walk(dir: string, extensions: string[] = [], fileList: string[] = []) {
   const files = await fs.readdir(dir, { withFileTypes: true })
   for (const file of files) {
     const filePath: string = path.resolve(dir, file.name)
     if (file.isDirectory()) {
-      console.log(`${chalk.bgBlue.white(' Traversing ')} Walk into directory ${chalk.underline.yellow(filePath)}`)
+      Logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`)
       fileList = await walk(filePath, extensions, fileList)
-      console.log(`${chalk.green(String('-').repeat(40))}`)
+      Logger.plain.divider('-')
     }
     else if (extensions.includes(path.extname(file.name))) {
-      console.log(`${chalk.bgBlue.white(' Traversing ')} Add file ${chalk.underline.yellow(file.name)} to process list`)
+      Logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print()
       fileList.push(filePath)
     }
   }
@@ -25,18 +26,18 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
 
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf-8')
-    console.log(`${chalk.white.bgBlue(' Processing ')} Scan keys from ${chalk.underline.yellow(filePath)}`)
+    Logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print()
     let currentFindKeys: string[] = []
     if (content) {
       currentFindKeys = content.match(pattern) ? content.match(pattern) as string[] : []
       if (currentFindKeys.length > 0) {
         keys.push(...currentFindKeys)
-        console.log(`${chalk.white.bgGreen(' Locating ')} Find key: ${
+        Logger.success.tag('Locating').message(`Find key: ${
                     currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
-                }`)
+                }`).print()
       }
       else {
-        console.log(`${chalk.white.bgGray(' Locating ')} No matched key`)
+        Logger.info.tag(' Locating ').message(`No matched key`).print()
       }
     }
 
@@ -52,7 +53,8 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
     //             currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
     //         }`)
     // }
-    console.log(`${chalk.green(String('-').repeat(40))}`)
+
+    Logger.plain.divider('-')
   }
   return keys
 }

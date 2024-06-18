@@ -6,6 +6,7 @@ import prompts from 'prompts'
 import chalk from 'chalk'
 import { extractTranslationKeys, transformArrayToObject } from './core'
 import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories, isDirectoryExists } from './utils'
+import { Logger } from './log';
 
 (async () => {
   const currentDirectory = cwd()
@@ -72,9 +73,8 @@ import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories,
   if (directories?.length > 0) {
     try {
       let allKeys: string[] = []
+      Logger.info.tag(' Setting ').message(`Use RegExp ${chalk.underline.yellow(pattern)} to match`).print()
       for (const directoryPath of directories) {
-        console.log(`${chalk.white.bgBlue(' Setting ')} Use RegExp ${chalk.underline.yellow(pattern)} to match`)
-        console.log(`${chalk.green(String('-').repeat(40))}`)
         const keys = await extractTranslationKeys(
           pattern,
           directoryPath,
@@ -83,7 +83,7 @@ import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories,
         allKeys = allKeys.concat(keys)
       }
       const sortedKeys = allKeys.sort()
-      console.log(`${chalk.bgGreen.white(' Resulting ')} Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`)
+      Logger.info.tag(' Resulting ').message(`Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`).print()
 
       const objectContent = transformArrayToObject(sortedKeys)
 
@@ -92,7 +92,7 @@ import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories,
           fs.mkdirSync(path.dirname(outputPath), { recursive: true })
         }
         fs.writeFileSync(outputPath, JSON.stringify(objectContent, null, 2))
-        console.log(`${chalk.bgGreen.white(' Saving ')} Extracted keys saved to ${chalk.underline.yellow(outputPath)}`)
+        Logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(outputPath)}`).print()
       }
       catch (error) {
         console.error(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`, error)
