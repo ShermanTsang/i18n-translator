@@ -4,9 +4,9 @@ import { cwd } from 'node:process'
 import type { PromptObject } from 'prompts'
 import prompts from 'prompts'
 import chalk from 'chalk'
+import { logger } from '@shermant/logger'
 import { extractTranslationKeys, transformArrayToObject } from './core'
 import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirectories, isDirectoryExists } from './utils'
-import { Logger } from './log';
 
 (async () => {
   const currentDirectory = cwd()
@@ -73,7 +73,7 @@ import { Logger } from './log';
   if (directories?.length > 0) {
     try {
       let allKeys: string[] = []
-      Logger.info.tag(' Setting ').message(`Use RegExp ${chalk.underline.yellow(pattern)} to match`).print()
+      logger.info.tag(' Setting ').message(`Use RegExp ${chalk.underline.yellow(pattern)} to match`).print()
       for (const directoryPath of directories) {
         const keys = await extractTranslationKeys(
           pattern,
@@ -83,7 +83,7 @@ import { Logger } from './log';
         allKeys = allKeys.concat(keys)
       }
       const sortedKeys = allKeys.sort()
-      Logger.info.tag(' Resulting ').message(`Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`).print()
+      logger.info.tag(' Resulting ').message(`Found ${chalk.underline.yellow(sortedKeys.length)} keys in total`).print()
 
       const objectContent = transformArrayToObject(sortedKeys)
 
@@ -92,7 +92,7 @@ import { Logger } from './log';
           fs.mkdirSync(path.dirname(outputPath), { recursive: true })
         }
         fs.writeFileSync(outputPath, JSON.stringify(objectContent, null, 2))
-        Logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(outputPath)}`).print()
+        logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(outputPath)}`).print()
       }
       catch (error) {
         console.error(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`, error)

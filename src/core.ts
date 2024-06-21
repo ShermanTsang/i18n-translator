@@ -1,19 +1,19 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import chalk from 'chalk'
-import { Logger } from './log'
+import { logger } from '@shermant/logger'
 
 async function walk(dir: string, extensions: string[] = [], fileList: string[] = []) {
   const files = await fs.readdir(dir, { withFileTypes: true })
   for (const file of files) {
     const filePath: string = path.resolve(dir, file.name)
     if (file.isDirectory()) {
-      Logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`)
+      logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`)
       fileList = await walk(filePath, extensions, fileList)
-      Logger.plain.divider('-')
+      logger.plain.divider('-')
     }
     else if (extensions.includes(path.extname(file.name))) {
-      Logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print()
+      logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print()
       fileList.push(filePath)
     }
   }
@@ -26,18 +26,18 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
 
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf-8')
-    Logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print()
+    logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print()
     let currentFindKeys: string[] = []
     if (content) {
       currentFindKeys = content.match(pattern) ? content.match(pattern) as string[] : []
       if (currentFindKeys.length > 0) {
         keys.push(...currentFindKeys)
-        Logger.success.tag('Locating').message(`Find key: ${
+        logger.success.tag('Locating').message(`Find key: ${
                     currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
                 }`).print()
       }
       else {
-        Logger.info.tag(' Locating ').message(`No matched key`).print()
+        logger.info.tag(' Locating ').message(`No matched key`).print()
       }
     }
 
@@ -54,7 +54,7 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
     //         }`)
     // }
 
-    Logger.plain.divider('-')
+    logger.plain.divider('-')
   }
   return keys
 }
