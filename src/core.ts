@@ -27,32 +27,31 @@ export async function extractTranslationKeys(pattern: RegExp, directory: string,
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf-8')
     logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print()
-    let currentFindKeys: string[] = []
+    const currentFindKeys: string[] = []
     if (content) {
-      currentFindKeys = content.match(pattern) ? content.match(pattern) as string[] : []
+      const matches = content.matchAll(pattern)
+      for (const match of matches) {
+        keys.push(match[1])// the first capture group
+        currentFindKeys.push(match[1])
+      }
+      // let readText = pattern.exec(content)
+      // while (readText !== null) {
+      //   keys.push(readText[1])
+      //   currentFindKeys.push(readText[1])
+      //   readText = pattern.exec(content)
+      // }
       if (currentFindKeys.length > 0) {
-        keys.push(...currentFindKeys)
         logger.success.tag('Locating').message(`Find key: ${
                     currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
                 }`).print()
       }
       else {
-        logger.info.tag(' Locating ').message(`No matched key`).print()
+        logger.info.tag('Locating').message(`No matched key`).print()
       }
     }
-
-    // let readText = pattern.exec(content)
-    //
-    // while (readText !== null) {
-    //   keys.push(readText[1])
-    //   currentFindKeys.push(readText[1])
-    //   readText = pattern.exec(content)
-    // }
-    // if (currentFindKeys.length > 0) {
-    //   console.log(`${chalk.white.bgGreen(' Extracting ')} Find key: ${
-    //             currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
-    //         }`)
-    // }
+    else {
+      logger.warn.tag('Checking').message(`The file is empty`).print()
+    }
 
     logger.plain.divider('-')
   }
