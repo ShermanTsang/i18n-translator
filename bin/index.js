@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-import '../.output/build/index.js'
+import '../.output/dist/index.js'
