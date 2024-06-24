@@ -1,14 +1,14 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-export function getSubdirectories(directory: fs.PathLike) {
+export function getSubdirs(directory: fs.PathLike) {
   const entries = fs.readdirSync(directory, { withFileTypes: true })
   return entries
     .filter(entry => entry.isDirectory())
     .map(entry => entry.name)
 }
 
-export function getFileExtensionStatistics(directories: fs.PathLike[]) {
+export function getFileExtensionStatistics(dirs: fs.PathLike[]) {
   const extensionStatistic: Record<string, number> = {}
 
   function traverseDirectory(directory: fs.PathLike) {
@@ -27,7 +27,7 @@ export function getFileExtensionStatistics(directories: fs.PathLike[]) {
     })
   }
 
-  directories.forEach((directory) => {
+  dirs.forEach((directory) => {
     traverseDirectory(directory)
   })
 
