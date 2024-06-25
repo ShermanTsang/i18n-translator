@@ -1,6 +1,6 @@
 {
   "name": "@shermant/translation-generator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "ShermanT",
   "main": ".output/dist/index.js",
   "types": ".output/dist/index.d.ts",
