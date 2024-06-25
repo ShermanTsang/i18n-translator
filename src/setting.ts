@@ -7,6 +7,7 @@ import prompts, { type PromptObject } from 'prompts'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import * as dotenv from 'dotenv'
+import { logger } from '@shermant/logger'
 import { createRegexFromTemplate, getFileExtensionStatistics, getSubDirs } from './utils.ts'
 
 export function pickSettingOptions(rawOptions: Record<string, any>): Setting.InputOptions {
@@ -21,7 +22,7 @@ export function pickSettingOptions(rawOptions: Record<string, any>): Setting.Inp
 
 export async function getSettingFromInquirer(targetOptions: Setting.OptionsInputKeysExcept<'env'>[] = [], currentOptions = {} as Setting.NullableInputOptions): Promise<Setting.SourceCheckResult> {
   const currentDirectory = cwd()
-  const subdirs = getSubDirs(currentDirectory)
+  const subDirs = getSubDirs(currentDirectory)
   const questions: PromptObject<string>[] = []
 
   const presetQuestions: Record<Setting.OptionsInputKeysExcept<'env'>, PromptObject<string>> = {
@@ -42,7 +43,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'multiselect',
       name: 'dirs',
       message: 'Select the dirs to extract translation keys from',
-      choices: subdirs.map(subDir => ({
+      choices: subDirs.map(subDir => ({
         title: subDir,
         value: path.join(currentDirectory, subDir),
         disabled: Boolean(subDir.includes('node_modules')),
@@ -87,7 +88,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
     }
   }
 
-  const options = await prompts(questions) as Setting.InputOptions
+  const options = await prompts(questions, {
+    onCancel: () => {
+      logger.failure.tag('Exiting').message('User cancelled the operation').print()
+      process.exit(1)
+    },
+  }) as Setting.InputOptions
   return { hasConfig: true, options }
 }
 
