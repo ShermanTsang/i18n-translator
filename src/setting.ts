@@ -168,11 +168,18 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
 
   if (typeof options.exts === 'string') {
     if (options.exts.includes(',')) {
-      standardizedOptions.exts = options.exts.split(',').map(ext => ext.trim())
+      standardizedOptions.exts = options.exts.split(',').map((ext) => {
+        return ext.trim().startsWith('.') ? ext : `.${ext}`
+      })
     }
     else {
-      standardizedOptions.exts = [options.exts.trim()]
+      standardizedOptions.exts = [options.exts.trim().startsWith('.') ? options.exts : `.${options.exts}`]
     }
+  }
+  else if (Array.isArray(options.exts)) {
+    standardizedOptions.exts = options.exts.map((ext) => {
+      return ext.trim().startsWith('.') ? ext : `.${ext}`
+    })
   }
 
   if (typeof options.output === 'string') {

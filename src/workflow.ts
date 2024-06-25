@@ -96,9 +96,9 @@ try {
     logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(finalSettings.output)}`).print()
   }
   catch (error) {
-    logger.warn.tag('writing').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`, error).print()
+    logger.error.tag('writing').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`, error).print()
   }
 }
 catch (error) {
-  logger.warn.tag('extracting').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`, error).print()
+  logger.error.tag('extracting').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`, error).print()
 }

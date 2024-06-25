@@ -9,7 +9,7 @@
   "homepage": "",
   "license": "ISC",
   "scripts": {
-    "start": "bun run src/index.ts --pattern=tttt --exts=vue js",
+    "start": "bun run src/index.ts --pattern=tttt --exts vue js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
   },

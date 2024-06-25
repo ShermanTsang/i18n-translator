@@ -3,14 +3,13 @@ import * as path from 'node:path'
 import chalk from 'chalk'
 import { logger } from '@shermant/logger'
 
-async function walk(dir: string, extensions: string[] = [], fileList: string[] = []) {
+async function walk(dir: string, extensions: string[] = [], fileList: string[]) {
   const files = await fs.readdir(dir, { withFileTypes: true })
   for (const file of files) {
     const filePath: string = path.resolve(dir, file.name)
     if (file.isDirectory()) {
-      logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`)
+      logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print()
       fileList = await walk(filePath, extensions, fileList)
-      logger.plain.divider('-')
     }
     else if (extensions.includes(path.extname(file.name))) {
       logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print()
@@ -22,7 +21,7 @@ async function walk(dir: string, extensions: string[] = [], fileList: string[] =
 
 export async function extractTranslationKeys(pattern: RegExp, directory: string, extensions: string[]) {
   const keys = []
-  const files = await walk(directory, extensions)
+  const files = await walk(directory, extensions, [])
 
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf-8')
