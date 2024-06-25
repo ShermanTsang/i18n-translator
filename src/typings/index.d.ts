@@ -32,4 +32,9 @@ namespace Setting {
       [key in InputOptions]: InputOptions[key]
     }
   }
+
+  export interface ValueValidateResult {
+    unset: Setting.OptionsInputKeysExcept<'env'>[]
+    invalid: Setting.OptionsInputKeysExcept<'env'>[]
+  }
 }

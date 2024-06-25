@@ -1,12 +1,13 @@
 import path from 'node:path'
 import * as process from 'node:process'
 import { cwd } from 'node:process'
+import type { PathLike } from 'node:fs'
 import * as fs from 'node:fs'
 import prompts, { type PromptObject } from 'prompts'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import * as dotenv from 'dotenv'
-import { createRegexFromTemplate, getFileExtensionStatistics, getSubdirs } from './utils.ts'
+import { createRegexFromTemplate, getFileExtensionStatistics, getSubDirs } from './utils.ts'
 
 export function pickSettingOptions(rawOptions: Record<string, any>): Setting.InputOptions {
   const requiredOptions: (Setting.OptionsKeys)[] = ['pattern', 'dirs', 'env', 'exts', 'output']
@@ -18,9 +19,9 @@ export function pickSettingOptions(rawOptions: Record<string, any>): Setting.Inp
   }, {} as Record<string, any>)
 }
 
-export async function getSettingFromInquirer(targetOptions: Setting.OptionsInputKeysExcept<'env'>[] = []): Promise<Setting.SourceCheckResult> {
+export async function getSettingFromInquirer(targetOptions: Setting.OptionsInputKeysExcept<'env'>[] = [], currentOptions = {} as Setting.NullableInputOptions): Promise<Setting.SourceCheckResult> {
   const currentDirectory = cwd()
-  const subdirs = getSubdirs(currentDirectory)
+  const subdirs = getSubDirs(currentDirectory)
   const questions: PromptObject<string>[] = []
 
   const presetQuestions: Record<Setting.OptionsInputKeysExcept<'env'>, PromptObject<string>> = {
@@ -53,7 +54,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       name: 'exts',
       message: 'Select the file extensions to extract keys from',
       choices: (dirs: string[]) => {
-        const extensionStatistics = getFileExtensionStatistics(dirs)
+        const extensionStatistics = getFileExtensionStatistics(dirs || currentOptions.dirs)
         const totalFiles = Object.values(extensionStatistics).reduce((acc, curr) => acc + curr, 0)
         return Object.keys(extensionStatistics).map((ext) => {
           const stat = chalk.gray(`${extensionStatistics[ext]} count(s) / ${(extensionStatistics[ext] / totalFiles * 100).toFixed(2)}%`)
@@ -106,7 +107,7 @@ export function getSettingFromCommand(): Setting.SourceCheckResult {
   return { hasConfig: Reflect.ownKeys(options).length > 0, options }
 }
 
-export function getSettingFromEnv(filePath: fs.PathLike | undefined | string = path.resolve(process.cwd(), '.env')): Setting.SourceCheckResult {
+export function getSettingFromEnv(filePath: PathLike | null): Setting.SourceCheckResult {
   let [hasConfig, options] = [false, {}]
   if (filePath && fs.existsSync(filePath)) {
     const unifiedPath = path.resolve(filePath as string)
@@ -123,16 +124,24 @@ export function getSettingFromEnv(filePath: fs.PathLike | undefined | string = p
   }
 }
 
-export function checkSettingsCompletion(settings: Setting.NullableInputOptions): Setting.OptionsKeys[] {
-  const unsetSettings: Setting.OptionsKeys[] = []
+export function validateSettings(settings: Setting.NullableInputOptions): Setting.ValueValidateResult {
+  const unsetSettings = [] as Setting.OptionsInputKeysExcept<'env'>[]
+  const invalidSettings = [] as Setting.OptionsInputKeysExcept<'env'>[]
 
   Object.keys(settings).forEach((key) => {
     if (!settings[key as Setting.OptionsKeys]) {
-      unsetSettings.push(key as Setting.OptionsKeys)
+      unsetSettings.push(key as Setting.OptionsInputKeysExcept<'env'>)
     }
   })
 
-  return unsetSettings
+  if (settings.pattern && !settings.pattern.includes('%key%')) {
+    invalidSettings.push('pattern')
+  }
+
+  return {
+    unset: unsetSettings,
+    invalid: invalidSettings,
+  }
 }
 
 export function standardizeOptions(options: Setting.InputOptions): Setting.Options {
@@ -144,28 +153,28 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
 
   if (typeof options.dirs === 'string') {
     if (options.dirs.includes(',')) {
-      options.dirs = options.dirs.split(',').map(dir => dir.trim())
+      standardizedOptions.dirs = options.dirs.split(',').map(dir => dir.trim())
     }
     else {
-      options.dirs = [options.dirs.trim()]
+      standardizedOptions.dirs = [options.dirs.trim()]
     }
   }
 
   if (typeof options.exts === 'string') {
     if (options.exts.includes(',')) {
-      options.exts = options.exts.split(',').map(ext => ext.trim())
+      standardizedOptions.exts = options.exts.split(',').map(ext => ext.trim())
     }
     else {
-      options.exts = [options.exts.trim()]
+      standardizedOptions.exts = [options.exts.trim()]
     }
   }
 
   if (typeof options.output === 'string') {
-    options.output = path.resolve(options.output)
+    standardizedOptions.output = path.resolve(options.output)
   }
 
   if (typeof options.env === 'string') {
-    options.env = path.resolve(options.env)
+    standardizedOptions.env = path.resolve(options.env)
   }
 
   return standardizedOptions
