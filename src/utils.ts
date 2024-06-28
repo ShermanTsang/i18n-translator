@@ -72,8 +72,9 @@ export function createRegexFromTemplate(template: string) {
   return new RegExp(regexString, 'g')
 }
 
-export default {
-  isDirectoryExists,
-  createDirectory,
-  createRegexFromTemplate,
+export function transformArrayToObject(keys: string[]) {
+  return keys.reduce((acc: Record<string, any>, key) => {
+    acc[key] = key
+    return acc
+  }, {})
 }

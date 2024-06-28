@@ -3,8 +3,7 @@ import * as path from 'node:path'
 import * as process from 'node:process'
 import chalk from 'chalk'
 import { logger } from '@shermant/logger'
-import { extractTranslationKeys, transformArrayToObject } from './core'
-import { isDirectoryExists } from './utils'
+import { isDirectoryExists, transformArrayToObject } from './utils'
 import {
   getSettingFromCommand,
   getSettingFromEnv,
@@ -12,6 +11,7 @@ import {
   standardizeOptions,
   validateSettings,
 } from './setting.ts'
+import { Extractor } from './extractor.ts'
 
 const defaultSettings: Setting.NullableInputOptions = {
   env: path.resolve(process.cwd(), '.env'),
@@ -76,11 +76,9 @@ try {
   let allKeys: string[] = []
   logger.info.tag('setting').message(`Use RegExp ${chalk.underline.yellow(finalSettings.pattern)} to match`).print()
   for (const dirPath of finalSettings.dirs) {
-    const keys = await extractTranslationKeys(
-      finalSettings.pattern,
-      dirPath,
-      finalSettings.exts,
-    )
+    const extractor = new Extractor(finalSettings.pattern, dirPath, finalSettings.exts)
+    const keys = await extractor.run()
+
     allKeys = allKeys.concat(keys)
   }
   const sortedKeys = allKeys.sort()

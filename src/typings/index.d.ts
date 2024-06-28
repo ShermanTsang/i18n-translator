@@ -38,3 +38,15 @@ namespace Setting {
     invalid: Setting.OptionsInputKeysExcept<'env'>[]
   }
 }
+
+namespace Extractor {
+  export interface Context {
+    keys: string[]
+    files: string[]
+    currentFileIndex: number
+    currentFindKeys: string[]
+    currentContent: string
+  }
+
+  export type State = 'INIT' | 'READ_FILE' | 'PROCESS_CONTENT' | 'LOG_RESULTS' | 'DONE'
+}
