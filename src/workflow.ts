@@ -14,7 +14,7 @@ import {
 import { Extractor } from './extractor.ts'
 
 export class Workflow {
-  private defaultSettings: Setting.NullableInputOptions
+  private readonly defaultSettings: Setting.NullableInputOptions
   private mergedSettings: Setting.NullableInputOptions
   private finalSettings: Setting.Options
   private sortedKeys: string[]
@@ -72,8 +72,8 @@ export class Workflow {
     }
 
     logger.info.tag('setting').appendDivider('-')
-      .message('merging mergedSettings from [[command line]] and [[.env file]], '
-      + '\n[[notice: the settings in command line will override the settings in .env file]]')
+      .message(`merging settings from [[command line]] and [[.env file]], 
+        \n[[notice: the settings in command line will override the settings in .env file]]`)
       .data(this.mergedSettings).print()
   }
 
