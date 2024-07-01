@@ -28,7 +28,7 @@ export class Workflow {
       dirs: null,
       exts: null,
     }
-    this.mergedSettings = { ...this.defaultSettings }
+    this.mergedSettings = {} as Setting.NullableInputOptions
     this.finalSettings = {} as Setting.Options
     this.sortedKeys = []
   }
@@ -45,7 +45,7 @@ export class Workflow {
   }
 
   async initState() {
-    logger.info.tag('check setting').appendDivider('-').message('Initializing...').print()
+    logger.info.tag('initializing').appendDivider('-').message('set default setting').data(this.defaultSettings).print()
   }
 
   async getSettingsState() {
@@ -72,7 +72,8 @@ export class Workflow {
     }
 
     logger.info.tag('setting').appendDivider('-')
-      .message('merging mergedSettings from [[command line]] and [[.env file]], [[notice: the settings in command line will override the settings in .env file]]')
+      .message('merging mergedSettings from [[command line]] and [[.env file]], '
+      + '\n[[notice: the settings in command line will override the settings in .env file]]')
       .data(this.mergedSettings).print()
   }
 
@@ -85,7 +86,7 @@ export class Workflow {
         .message(`you need provide the following settings:
           missing settings: ${unsetSettings.length > 0 ? (`[[${unsetSettings.join(', ')}]]`) : 'none'}
           invalid settings: ${invalidSettings.length > 0 ? (`[[${invalidSettings.join(', ')}]]`) : 'none'}
-          [[notice: the program will flow into inquirer process to complete them]]`)
+          \n[[notice: the program will flow into inquirer process to complete them]]`)
         .print()
     }
   }
