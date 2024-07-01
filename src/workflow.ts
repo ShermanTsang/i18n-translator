@@ -3,6 +3,7 @@ import * as path from 'node:path'
 import * as process from 'node:process'
 import chalk from 'chalk'
 import { logger } from '@shermant/logger'
+import * as chokidar from 'chokidar'
 import { isDirectoryExists, transformArrayToObject } from './utils'
 import {
   getSettingFromCommand,
@@ -27,6 +28,7 @@ export class Workflow {
       output: null,
       dirs: null,
       exts: null,
+      watch: false,
     }
     this.mergedSettings = {} as Setting.NullableInputOptions
     this.finalSettings = {} as Setting.Options
@@ -40,7 +42,6 @@ export class Workflow {
     await this.completeSettingsState()
     this.finalizeSettingsState()
     await this.extractKeysState()
-    this.sortKeysState()
     this.saveResultState()
   }
 
@@ -83,7 +84,7 @@ export class Workflow {
 
     if (this.needToCompleteSettings.length > 0) {
       logger.error.tag('Checking').appendDivider('-')
-        .message(`you need provide the following settings:
+        .message(`👋 please provide the following settings :
           missing settings: ${unsetSettings.length > 0 ? (`[[${unsetSettings.join(', ')}]]`) : 'none'}
           invalid settings: ${invalidSettings.length > 0 ? (`[[${invalidSettings.join(', ')}]]`) : 'none'}
           \n[[notice: the program will flow into inquirer process to complete them]]`)
@@ -112,26 +113,28 @@ export class Workflow {
     logger.info.tag('setting').message('final settings').data(this.finalSettings).appendDivider('-').print()
   }
 
-  async extractKeysState() {
+  async extractKeysState(verboseMode = true) {
     try {
       let allKeys: any[] = []
-      logger.info.tag('setting').message(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).print()
+      logger.info.tag('setting').message(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).print(verboseMode)
       for (const dirPath of this.finalSettings.dirs) {
         const extractor = new Extractor(this.finalSettings.pattern, dirPath, this.finalSettings.exts)
+        extractor.setVerboseMode(verboseMode)
         const keys = await extractor.run()
         allKeys = allKeys.concat(keys)
       }
       this.sortedKeys = allKeys.sort()
-      logger.info.tag(' Resulting ').message(`Found ${chalk.underline.yellow(this.sortedKeys.length)} keys in total`).print()
+      logger.info.tag(' Resulting ').message(`🥳Found [[${this.sortedKeys.length}]] keys in total`).print()
+      if (this.sortedKeys.length > 0) {
+        logger.success.tag('Resulting').message(`👉Extracted keys: 
+      [[${this.sortedKeys.join(']]  [[')}]]`,
+        ).print()
+      }
     }
     catch (error) {
       logger.error.tag('extracting').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`).print()
       process.exit(1)
     }
-  }
-
-  sortKeysState() {
-    // Keys are already sorted in extractKeysState
   }
 
   saveResultState() {
@@ -142,9 +145,36 @@ export class Workflow {
       }
       fs.writeFileSync(this.finalSettings.output, JSON.stringify(objectContent, null, 2))
       logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`).print()
+
+      if (this.finalSettings.watch) {
+        this.setupFileWatcher()
+      }
     }
     catch (error) {
       logger.error.tag('writing').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`).print()
     }
+  }
+
+  setupFileWatcher(delaySeconds: number = 5) {
+    logger.info.tag('watching').time(true).prependDivider('-').message(`file watcher will start after [[${delaySeconds}]] seconds`).print()
+    setTimeout(() => {
+      const watcher = chokidar.watch(this.finalSettings.dirs, {
+        ignored: /(^|[/\\])\../, // ignore dotfiles
+        persistent: true,
+      })
+
+      console.clear()
+      logger.info.tag('watching').time(true).prependDivider('-').appendDivider('-').message(`👁️Watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`).print()
+
+      watcher.on('change', async (path) => {
+        logger.info.tag('watching').time(true).message(`file ${chalk.underline.yellow(path)} has been changed`).appendDivider('-').print()
+        await this.extractKeysState(false)
+        this.saveResultState()
+      })
+
+      watcher.on('error', (error) => {
+        logger.error.tag('watching').time(true).message(`Watcher error: ${error}`).print()
+      })
+    }, delaySeconds * 1000)
   }
 }

@@ -7,6 +7,7 @@ namespace Setting {
     dirs: string[]
     exts: string[]
     output: string
+    watch: boolean
   }
 
   export interface InputOptions {
@@ -15,6 +16,7 @@ namespace Setting {
     dirs: string[] | string
     exts: string[] | string
     output: string | PathLike
+    watch: boolean
   }
 
   export type OptionsInputKeys = keyof InputOptions
@@ -40,6 +42,8 @@ namespace Setting {
 }
 
 namespace Extractor {
+  export type State = 'INIT' | 'READ_FILE' | 'PROCESS_CONTENT' | 'LOG_RESULTS' | 'DONE'
+
   export interface Context {
     keys: string[]
     files: string[]
@@ -47,6 +51,4 @@ namespace Extractor {
     currentFindKeys: string[]
     currentContent: string
   }
-
-  export type State = 'INIT' | 'READ_FILE' | 'PROCESS_CONTENT' | 'LOG_RESULTS' | 'DONE'
 }

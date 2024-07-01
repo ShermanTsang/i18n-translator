@@ -11,7 +11,7 @@ import { logger } from '@shermant/logger'
 import { createRegexFromTemplate, getFileExtensionStatistics, getSubDirs } from './utils.ts'
 
 export function pickSettingOptions(rawOptions: Record<string, any>): Setting.InputOptions {
-  const requiredOptions: (Setting.OptionsKeys)[] = ['pattern', 'dirs', 'env', 'exts', 'output']
+  const requiredOptions: (Setting.OptionsKeys)[] = ['pattern', 'dirs', 'env', 'exts', 'output', 'watch']
   return <Setting.InputOptions>Object.keys(rawOptions).reduce((acc, key) => {
     if (requiredOptions.includes(key as Setting.OptionsKeys)) {
       acc[key] = rawOptions[key]
@@ -29,7 +29,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
     pattern: {
       type: 'text',
       name: 'pattern',
-      message: `Enter the pattern to search for, use ${chalk.yellow.underline('%key%')} to match variable`,
+      message: `Enter the pattern to search for, use ${chalk.yellow.underline('%key%')} to express ${chalk.yellow.underline('variables')}`,
       initial: `t('%key%')`,
       validate: (value: string | null) => {
         if (!value || value.length === 0) {
@@ -80,6 +80,14 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
         return value.includes('.')
       },
     },
+    watch: {
+      type: 'toggle',
+      name: 'watch',
+      message: 'Enable watching mode',
+      initial: true,
+      active: 'yes',
+      inactive: 'no',
+    },
   }
 
   for (const key of targetOptions) {
@@ -106,6 +114,7 @@ export function getSettingFromCommand(): Setting.SourceCheckResult {
     .option('-d, --dirs <dirs...>', 'directories to match')
     .option('-e, --exts <exts...>', 'extensions to match')
     .option('-o, --output <output>', 'output lang files path', '.output/lang.json')
+    .option('--watch', 'enable watching mode', true)
     .parse(process.argv)
 
   const options = pickSettingOptions(program.opts() || {})

@@ -6,6 +6,7 @@ import { logger } from '@shermant/logger'
 export class Extractor {
   private state: Extractor.State = 'INIT'
   private context: Extractor.Context
+  private verboseMode: boolean = true
 
   constructor(private pattern: RegExp, private directory: string, private extensions: string[]) {
     this.context = {
@@ -17,16 +18,20 @@ export class Extractor {
     }
   }
 
-  static async walk(dir: string, extensions: string[] = [], fileList: string[]) {
+  setVerboseMode(mode: boolean) {
+    this.verboseMode = mode
+  }
+
+  private async walk(dir: string, extensions: string[] = [], fileList: string[]) {
     const files = await fs.readdir(dir, { withFileTypes: true })
     for (const file of files) {
       const filePath: string = path.resolve(dir, file.name)
       if (file.isDirectory()) {
-        logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print()
-        fileList = await Extractor.walk(filePath, extensions, fileList)
+        logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print(this.verboseMode)
+        fileList = await this.walk(filePath, extensions, fileList)
       }
       else if (extensions.includes(path.extname(file.name))) {
-        logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print()
+        logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
         fileList.push(filePath)
       }
     }
@@ -54,7 +59,7 @@ export class Extractor {
   }
 
   private async init() {
-    this.context.files = await Extractor.walk(this.directory, this.extensions, [])
+    this.context.files = await this.walk(this.directory, this.extensions, [])
     this.state = this.context.files.length > 0 ? 'READ_FILE' : 'DONE'
   }
 
@@ -68,7 +73,7 @@ export class Extractor {
     this.context.currentContent = await fs.readFile(filePath, 'utf-8')
     this.state = 'PROCESS_CONTENT'
 
-    logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print()
+    logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print(this.verboseMode)
   }
 
   private processContent() {
@@ -92,16 +97,16 @@ export class Extractor {
     if (currentFindKeys.length > 0) {
       logger.success.tag('Locating').message(`Find key: ${
                 currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
-            }`).print()
+            }`).print(this.verboseMode)
     }
     else if (this.context.currentContent) {
-      logger.info.tag('Locating').message(`No matched key`).print()
+      logger.info.tag('Locating').message(`No matched key`).print(this.verboseMode)
     }
     else {
-      logger.warn.tag('Checking').message(`The file is empty`).print()
+      logger.warn.tag('Checking').message(`The file is empty`).print(this.verboseMode)
     }
 
-    logger.plain.divider('-')
+    this.verboseMode && logger.plain.divider('-')
     this.context.currentFileIndex += 1
     this.state = 'READ_FILE'
   }
