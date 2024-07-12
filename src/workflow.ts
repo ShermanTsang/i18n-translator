@@ -43,6 +43,7 @@ export class Workflow {
     this.finalizeSettingsState()
     await this.extractKeysState()
     this.saveResultState()
+    this.translateFilesState()
   }
 
   async initState() {
@@ -176,5 +177,9 @@ export class Workflow {
         logger.error.tag('watching').time(true).message(`Watcher error: ${error}`).print()
       })
     }, delaySeconds * 1000)
+  }
+
+  translateFilesState() {
+
   }
 }
