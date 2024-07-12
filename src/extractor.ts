@@ -22,22 +22,6 @@ export class Extractor {
     this.verboseMode = mode
   }
 
-  private async walk(dir: string, extensions: string[] = [], fileList: string[]) {
-    const files = await fs.readdir(dir, { withFileTypes: true })
-    for (const file of files) {
-      const filePath: string = path.resolve(dir, file.name)
-      if (file.isDirectory()) {
-        logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print(this.verboseMode)
-        fileList = await this.walk(filePath, extensions, fileList)
-      }
-      else if (extensions.includes(path.extname(file.name))) {
-        logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
-        fileList.push(filePath)
-      }
-    }
-    return fileList
-  }
-
   async run() {
     while (this.state !== 'DONE') {
       switch (this.state) {
@@ -56,6 +40,22 @@ export class Extractor {
       }
     }
     return this.context.keys
+  }
+
+  private async walk(dir: string, extensions: string[] = [], fileList: string[]) {
+    const files = await fs.readdir(dir, { withFileTypes: true })
+    for (const file of files) {
+      const filePath: string = path.resolve(dir, file.name)
+      if (file.isDirectory()) {
+        logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print(this.verboseMode)
+        fileList = await this.walk(filePath, extensions, fileList)
+      }
+      else if (extensions.includes(path.extname(file.name))) {
+        logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
+        fileList.push(filePath)
+      }
+    }
+    return fileList
   }
 
   private async init() {

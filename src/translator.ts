@@ -53,8 +53,7 @@ export class Translator {
     'mr': 'Marathi',
   }))
 
-  private _state?: Translator.State
-
+  protected translatedContent: Translator.JsonContent = {}
   private _config: Translator.Config = {
     apiKey: '',
     apiEndpoint: '',
@@ -69,42 +68,24 @@ export class Translator {
 
   private _response: any = null
 
-  protected translatedContent: Translator.JsonContent = {}
-
   constructor(apiEndpoint: string, apiKey: string, inputFilePath: string) {
     this.apiKey = apiKey
     this.apiEndpoint = apiEndpoint
     this.inputFilePath = inputFilePath
   }
 
-  async translate(lang: Translator.Language) {
-    this.lang = lang
+  private _state?: Translator.State
 
-    while (this.state !== 'DONE') {
-      switch (this.state) {
-        case 'REQUEST': {
-          await this.request()
-          break
-        }
-        case 'HANDLE_RESPONSE': {
-          this.handleResponse()
-          break
-        }
-        case 'EXTRACT_JSON': {
-          this.extractJson()
-          break
-        }
-        case 'SAVE_FILE': {
-          this.saveTranslatedFile()
-          break
-        }
-        case 'ERROR': {
-          break
-        }
-        default:
-          break
-      }
+  protected get state() {
+    if (!this._state) {
+      this.state = 'REQUEST'
     }
+    return this._state as Translator.State
+  }
+
+  protected set state(state: Translator.State) {
+    this._state = state
+    logger.info.tag('Translating').message(`start process [[${String(state).replace('_', ' ')}]]`).time().print()
   }
 
   protected get requestMethod() {
@@ -143,6 +124,16 @@ export class Translator {
     return this._config.inputFilePath
   }
 
+  protected set inputFilePath(inputFilePath: string) {
+    try {
+      this._config.inputFilePath = path.resolve(cwd(), inputFilePath)
+      this.originalFileContent = Translator.readJsonFile(inputFilePath)
+    }
+    catch (error) {
+      throw new Error('Invalid input file path')
+    }
+  }
+
   protected get outputFilePath() {
     if (!this._config.outputFilePath && this.inputFilePath) {
       this.outputFilePath = this.inputFilePath.replace('.json', `-${this.lang}.json`)
@@ -152,16 +143,6 @@ export class Translator {
 
   protected set outputFilePath(outputFilePath: string) {
     this._config.outputFilePath = outputFilePath
-  }
-
-  protected set inputFilePath(inputFilePath: string) {
-    try {
-      this._config.inputFilePath = path.resolve(cwd(), inputFilePath)
-      this.originalFileContent = Translator.readJsonFile(inputFilePath)
-    }
-    catch (error) {
-      throw new Error('Invalid input file path')
-    }
   }
 
   protected get originalFileContent() {
@@ -188,18 +169,6 @@ export class Translator {
     this._config.responseHandler = responseHandler
   }
 
-  protected get state() {
-    if (!this._state) {
-      this.state = 'REQUEST'
-    }
-    return this._state as Translator.State
-  }
-
-  protected set state(state: Translator.State) {
-    this._state = state
-    logger.info.tag('Translating').message(`start process [[${String(state).replace('_', ' ')}]]`).time().print()
-  }
-
   protected get requestData() {
     const rawData = this.requestDataFunc(this.lang, this.originalFileContent)
     let data = ''
@@ -215,6 +184,45 @@ export class Translator {
     }
 
     return data
+  }
+
+  static readJsonFile(filePath: PathLike): string {
+    return fs.readFileSync(filePath, 'utf8')
+  }
+
+  static writeJsonFile(filePath: PathLike, content: Translator.JsonContent): void {
+    const data = JSON.stringify(content, null, 2)
+    fs.writeFileSync(filePath, data, 'utf8')
+  }
+
+  async translate(lang: Translator.Language) {
+    this.lang = lang
+
+    while (this.state !== 'DONE') {
+      switch (this.state) {
+        case 'REQUEST': {
+          await this.request()
+          break
+        }
+        case 'HANDLE_RESPONSE': {
+          this.handleResponse()
+          break
+        }
+        case 'EXTRACT_JSON': {
+          this.extractJson()
+          break
+        }
+        case 'SAVE_FILE': {
+          this.saveTranslatedFile()
+          break
+        }
+        case 'ERROR': {
+          break
+        }
+        default:
+          break
+      }
+    }
   }
 
   protected async request(): Promise<any> {
@@ -276,15 +284,6 @@ export class Translator {
 
     this.translatedContent = content
     this.state = 'SAVE_FILE'
-  }
-
-  static readJsonFile(filePath: PathLike): string {
-    return fs.readFileSync(filePath, 'utf8')
-  }
-
-  static writeJsonFile(filePath: PathLike, content: Translator.JsonContent): void {
-    const data = JSON.stringify(content, null, 2)
-    fs.writeFileSync(filePath, data, 'utf8')
   }
 
   protected saveTranslatedFile() {
