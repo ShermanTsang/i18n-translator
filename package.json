@@ -1,6 +1,6 @@
 {
   "name": "@shermant/translation-generator",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "author": "ShermanT",
   "main": ".output/dist/index.js",
   "types": ".output/dist/index.d.ts",
@@ -9,7 +9,7 @@
   "homepage": "",
   "license": "ISC",
   "scripts": {
-    "start": "bun run src/index.ts --pattern=tttt --exts vue js --watch",
+    "start": "ts-node-esm src/index.ts --pattern=tttt --exts vue js --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
   },
@@ -24,6 +24,7 @@
     "@types/prompts": "^2.4.9",
     "eslint": "^9.4.0",
     "eslint-plugin-format": "^0.1.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {

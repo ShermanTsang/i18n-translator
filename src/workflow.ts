@@ -6,6 +6,7 @@ import { logger } from '@shermant/logger'
 import * as chokidar from 'chokidar'
 import { isDirectoryExists, transformArrayToObject } from './utils'
 import {
+  defaultSettings,
   getSettingFromCommand,
   getSettingFromEnv,
   getSettingFromInquirer,
@@ -13,6 +14,7 @@ import {
   validateSettings,
 } from './setting.ts'
 import { Extractor } from './extractor.ts'
+import { DeepseekTranslator } from './providers/deepseek.ts'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -22,14 +24,7 @@ export class Workflow {
   private needToCompleteSettings: Setting.OptionsInputKeysExcept<'env'>[] = []
 
   constructor() {
-    this.defaultSettings = {
-      env: path.resolve(process.cwd(), '.env'),
-      pattern: null,
-      output: null,
-      dirs: null,
-      exts: null,
-      watch: false,
-    }
+    this.defaultSettings = defaultSettings
     this.mergedSettings = {} as Setting.NullableInputOptions
     this.finalSettings = {} as Setting.Options
     this.sortedKeys = []
@@ -41,9 +36,16 @@ export class Workflow {
     await this.validateSettingsState()
     await this.completeSettingsState()
     this.finalizeSettingsState()
-    await this.extractKeysState()
-    this.saveResultState()
-    this.translateFilesState()
+    if (this.finalSettings.tasks.includes('extract')) {
+      await this.extractKeysState()
+      this.saveResultState()
+    }
+    if (this.finalSettings.tasks.includes('translate')) {
+      await this.translateFilesState()
+    }
+    if (this.finalSettings.watch) {
+      this.setupFileWatcher()
+    }
   }
 
   async initState() {
@@ -111,7 +113,7 @@ export class Workflow {
 
   finalizeSettingsState() {
     this.finalSettings = standardizeOptions(this.mergedSettings as Setting.InputOptions)
-    logger.info.tag('setting').message('final settings').data(this.finalSettings).appendDivider('-').print()
+    logger.info.tag('setting').message('final settings').data(this.finalSettings).prependDivider('-').appendDivider('-').print()
   }
 
   async extractKeysState(verboseMode = true) {
@@ -125,15 +127,15 @@ export class Workflow {
         allKeys = allKeys.concat(keys)
       }
       this.sortedKeys = allKeys.sort()
-      logger.info.tag(' Resulting ').message(`🥳Found [[${this.sortedKeys.length}]] keys in total`).print()
+      logger.info.tag(' Resulting ').message(`🥳 Found [[${this.sortedKeys.length}]] keys in total`).print()
       if (this.sortedKeys.length > 0) {
-        logger.success.tag('Resulting').message(`👉Extracted keys: 
+        logger.success.tag('Resulting').message(`👉 Extracted keys: 
       [[${this.sortedKeys.join(']]  [[')}]]`,
         ).print()
       }
     }
     catch (error) {
-      logger.error.tag('extracting').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`).print()
+      logger.error.tag('extracting').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`).data(error).print()
       process.exit(1)
     }
   }
@@ -145,19 +147,16 @@ export class Workflow {
         fs.mkdirSync(path.dirname(this.finalSettings.output), { recursive: true })
       }
       fs.writeFileSync(this.finalSettings.output, JSON.stringify(objectContent, null, 2))
-      logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`).print()
-
-      if (this.finalSettings.watch) {
-        this.setupFileWatcher()
-      }
+      logger.success.tag('saving').message(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`).appendDivider('-').print()
     }
     catch (error) {
-      logger.error.tag('writing').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`).print()
+      logger.error.tag('writing').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`).appendDivider('-').print()
+      process.exit(1)
     }
   }
 
   setupFileWatcher(delaySeconds: number = 5) {
-    logger.info.tag('watching').time(true).prependDivider('-').message(`file watcher will start after [[${delaySeconds}]] seconds`).print()
+    logger.info.tag('watching').time(true).prependDivider('-').message(`file watcher will start within [[${delaySeconds}]] seconds`).print()
     setTimeout(() => {
       const watcher = chokidar.watch(this.finalSettings.dirs, {
         ignored: /(^|[/\\])\../, // ignore dotfiles
@@ -169,8 +168,9 @@ export class Workflow {
 
       watcher.on('change', async (path) => {
         logger.info.tag('watching').time(true).message(`file ${chalk.underline.yellow(path)} has been changed`).appendDivider('-').print()
-        await this.extractKeysState(false)
+        this.finalSettings.tasks.includes('extract') && await this.extractKeysState(false)
         this.saveResultState()
+        this.finalSettings.tasks.includes('translate') && await this.translateFilesState()
       })
 
       watcher.on('error', (error) => {
@@ -179,7 +179,19 @@ export class Workflow {
     }, delaySeconds * 1000)
   }
 
-  translateFilesState() {
-
+  async translateFilesState() {
+    if (!this.finalSettings.key) {
+      logger.error.tag('checking API key').message(`Key is not provided`).print()
+    }
+    const providerMap = new Map([
+      ['deepseek', DeepseekTranslator],
+    ])
+    const Provider = providerMap.get(this.finalSettings.provider)
+    if (!Provider) {
+      logger.error.tag('load translate provider').message(`Provider [[${this.finalSettings.provider}]] not found`).appendDivider('-').print()
+      return
+    }
+    const translator = new (Provider)(this.finalSettings.key, this.finalSettings.output)
+    await translator.translate(this.finalSettings.languages)
   }
 }

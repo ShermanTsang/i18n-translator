@@ -12,11 +12,11 @@ export class DeepseekTranslator extends Translator {
       return {
         messages: [
           {
-            content: 'You are a translator to help my translate the json file written in english to another language',
+            content: 'You are a translator to help me translate the json file written in english to another language',
             role: 'system',
           },
           {
-            content: `target language is:${Translator.languageMap.get(lang)}`,
+            content: `target language is: ${Translator.languageMap.get(lang)}`,
             role: 'user',
           },
           {

@@ -8,13 +8,30 @@ import chalk from 'chalk'
 import { Command } from 'commander'
 import * as dotenv from 'dotenv'
 import { logger } from '@shermant/logger'
+import { Translator } from './translator.ts'
 import { createRegexFromTemplate, getFileExtensionStatistics, getSubDirs } from './utils.ts'
 
-export function pickSettingOptions(rawOptions: Record<string, any>): Setting.InputOptions {
-  const requiredOptions: (Setting.OptionsKeys)[] = ['pattern', 'dirs', 'env', 'exts', 'output', 'watch']
+export const defaultSettings = {
+  tasks: null,
+  env: path.resolve(process.cwd(), '.env'),
+  pattern: null,
+  output: null,
+  dirs: null,
+  exts: null,
+  watch: false,
+  languages: null,
+  provider: null,
+  key: null,
+}
+
+export const settingKeys = Object.keys(defaultSettings)
+
+export function pickSettingOptions(rawOptions: Record<string, any>, prefix?: string): Setting.InputOptions {
+  const requiredOptions: string[] = settingKeys
   return <Setting.InputOptions>Object.keys(rawOptions).reduce((acc, key) => {
-    if (requiredOptions.includes(key as Setting.OptionsKeys)) {
-      acc[key] = rawOptions[key]
+    const matchingKey = prefix ? key.replace(prefix, '') : key
+    if (requiredOptions.includes(matchingKey as Setting.OptionsKeys)) {
+      acc[matchingKey] = rawOptions[key]
     }
     return acc
   }, {} as Record<string, any>)
@@ -26,6 +43,25 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
   const questions: PromptObject<string>[] = []
 
   const presetQuestions: Record<Setting.OptionsInputKeysExcept<'env'>, PromptObject<string>> = {
+    tasks: {
+      type: 'multiselect',
+      name: 'tasks',
+      message: 'Select the tasks to run',
+      choices: [
+        {
+          title: '🔎 Search and extract i18n keys',
+          value: 'extract',
+          selected: true,
+          description: 'from the given pattern you provided',
+        },
+        {
+          title: '📚 Translate lang files',
+          value: 'translate',
+          selected: true,
+          description: 'via AI translation services',
+        },
+      ],
+    },
     pattern: {
       type: 'text',
       name: 'pattern',
@@ -88,6 +124,30 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       active: 'yes',
       inactive: 'no',
     },
+    languages: {
+      type: 'autocompleteMultiselect',
+      name: 'languages',
+      message: 'Select the languages to translate',
+      choices: Object.entries(Translator.languages).map(([abbr, language]) => ({
+        title: language,
+        value: abbr,
+      })),
+      min: 1,
+    },
+    provider: {
+      type: 'select',
+      name: 'provider',
+      message: 'Choose the translation provider',
+      choices: Translator.providers.map(provider => ({
+        title: provider,
+        value: provider,
+      })),
+    },
+    key: {
+      type: 'text',
+      name: 'key',
+      message: 'Enter the translation service key',
+    },
   }
 
   for (const key of targetOptions) {
@@ -110,10 +170,14 @@ export function getSettingFromCommand(): Setting.SourceCheckResult {
 
   program
     .option('--env <env>', '.env file path')
+    .option('-t, --tasks <tasks>', 'service tasks')
     .option('-p, --pattern <pattern>', 'pattern to match')
     .option('-d, --dirs <dirs...>', 'directories to match')
     .option('-e, --exts <exts...>', 'extensions to match')
     .option('-o, --output <output>', 'output lang files path', '.output/lang.json')
+    .option('-l, --langs <languages...>', 'target translating languages')
+    .option('-pr, --provider <provider>', 'translating service provider')
+    .option('-k, --key <key>', 'translating service API key')
     .option('--watch', 'enable watching mode', true)
     .parse(process.argv)
 
@@ -127,9 +191,11 @@ export function getSettingFromEnv(filePath: PathLike | null): Setting.SourceChec
   if (filePath && fs.existsSync(filePath)) {
     const unifiedPath = path.resolve(filePath as string)
     const allOptions = dotenv.config({ path: unifiedPath }).parsed || {}
-    options = pickSettingOptions(Object.fromEntries(
-      Object.entries(allOptions).map(([key, value]) => [key.toLowerCase(), value]),
-    ),
+    options = pickSettingOptions(
+      Object.fromEntries(
+        Object.entries(allOptions).map(([key, value]) => [key.toLowerCase(), value]),
+      ),
+      'translator_',
     )
     hasConfig = true
   }
@@ -189,6 +255,22 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
     standardizedOptions.exts = options.exts.map((ext) => {
       return ext.trim().startsWith('.') ? ext : `.${ext}`
     })
+  }
+
+  if (typeof options.languages === 'string') {
+    if (options.languages.includes(',')) {
+      standardizedOptions.languages = options.languages.split(',').map((lang) => {
+        return lang.trim().toLowerCase()
+      }) as Translator.Language[]
+    }
+    else {
+      standardizedOptions.languages = [options.languages.trim().toLowerCase()] as Translator.Language[]
+    }
+  }
+  else if (Array.isArray(options.languages)) {
+    standardizedOptions.languages = options.languages.map((lang) => {
+      return lang.trim().toLowerCase()
+    }) as Translator.Language[]
   }
 
   if (typeof options.output === 'string') {

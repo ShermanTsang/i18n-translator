@@ -34,6 +34,11 @@
     "node_modules",
     "**/*.spec.ts",
     ".output"
-  ]
-  // Exclude node_modules and test files}
+  ],
+  // Exclude node_modules and test files
+  "ts-node": {
+    "files": true,
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }
