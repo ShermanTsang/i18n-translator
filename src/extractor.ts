@@ -51,7 +51,7 @@ export class Extractor {
         fileList = await this.walk(filePath, extensions, fileList)
       }
       else if (extensions.includes(path.extname(file.name))) {
-        logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
+        // logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
         fileList.push(filePath)
       }
     }

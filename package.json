@@ -14,7 +14,7 @@
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
   },
   "bin": {
-    "translation-generator": "bin/index.js"
+    "traslator": "bin/index.js"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.20.0",
