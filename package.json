@@ -8,8 +8,12 @@
   "description": "",
   "homepage": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.10.0",
+    "bun": ">=1.0.0"
+  },
   "scripts": {
-    "start": "ts-node-esm src/index.ts --pattern=tttt --exts vue js --watch",
+    "start": "node --loader=ts-node/esm src/index.ts --pattern=tttt --exts vue js --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
   },
