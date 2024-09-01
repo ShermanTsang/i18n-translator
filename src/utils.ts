@@ -66,9 +66,22 @@ export function createDirectory(targetPath: string) {
   }
 }
 
+export function isRegex(template: string) {
+  return template.startsWith('/') && (template.endsWith('/') || template.endsWith('/g'))
+}
+
 export function createRegexFromTemplate(template: string) {
-  const escapedTemplate = template.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
-  const regexString = escapedTemplate.replace(/%key%/g, '([^\'\"\`]+)')
+  let regexString = template
+  if (isRegex(template)) {
+    regexString = template.slice(1, template.endsWith('/g') ? -2 : -1)
+  }
+  else {
+    // escaping special sings pattern
+    regexString = template.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+  }
+
+  regexString = regexString.replace(/%key%/g, '([^\'\"\`]+)')
+
   return new RegExp(regexString, 'g')
 }
 

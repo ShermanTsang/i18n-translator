@@ -229,7 +229,7 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
   const standardizedOptions: Setting.Options = { ...options as unknown as Setting.Options }
 
   if (Object.prototype.toString.call(options.pattern) !== '[object RegExp]') {
-    standardizedOptions.pattern = createRegexFromTemplate(options.pattern)
+    standardizedOptions.pattern = createRegexFromTemplate(options.pattern) as RegExp
   }
 
   if (typeof options.dirs === 'string') {
