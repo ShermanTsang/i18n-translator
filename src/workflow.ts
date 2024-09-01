@@ -85,6 +85,10 @@ export class Workflow {
     const { unset: unsetSettings, invalid: invalidSettings } = validateSettings(this.mergedSettings)
     this.needToCompleteSettings = Array.from(new Set([...unsetSettings, ...invalidSettings]))
 
+    if (!this.mergedSettings.tasks?.includes('translate')) {
+      this.needToCompleteSettings = this.needToCompleteSettings.filter(option => option !== 'provider')
+    }
+
     if (this.needToCompleteSettings.length > 0) {
       logger.error.tag('Checking').appendDivider('-')
         .message(`👋 please provide the following settings :
