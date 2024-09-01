@@ -47,6 +47,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'multiselect',
       name: 'tasks',
       message: 'Select the tasks to run',
+      instructions: true,
       choices: [
         {
           title: '🔎 Search and extract i18n keys',
@@ -67,6 +68,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       name: 'pattern',
       message: `Enter the pattern to search for, use ${chalk.yellow.underline('%key%')} to express ${chalk.yellow.underline('variables')}`,
       initial: `t('%key%')`,
+      instructions: true,
       validate: (value: string | null) => {
         if (!value || value.length === 0) {
           return false
@@ -79,6 +81,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'multiselect',
       name: 'dirs',
       message: 'Select the dirs to extract translation keys from',
+      instructions: true,
       choices: subDirs.map(subDir => ({
         title: subDir,
         value: path.join(currentDirectory, subDir),
@@ -90,6 +93,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'autocompleteMultiselect',
       name: 'exts',
       message: 'Select the file extensions to extract keys from',
+      instructions: true,
       choices: (dirs: string[]) => {
         const extensionStatistics = getFileExtensionStatistics(dirs || currentOptions.dirs)
         const totalFiles = Object.values(extensionStatistics).reduce((acc, curr) => acc + curr, 0)
@@ -109,6 +113,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'text',
       message: 'Enter the output path for the extracted keys',
       initial: path.resolve(currentDirectory, '.output/lang.json'),
+      instructions: true,
       validate: (value: string | null) => {
         if (!value || value.length === 0) {
           return false
@@ -128,6 +133,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'autocompleteMultiselect',
       name: 'languages',
       message: 'Select the languages to translate',
+      instructions: true,
       choices: Object.entries(Translator.languages).map(([abbr, language]) => ({
         title: language,
         value: abbr,
@@ -138,6 +144,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'select',
       name: 'provider',
       message: 'Choose the translation provider',
+      instructions: true,
       choices: Translator.providers.map(provider => ({
         title: provider,
         value: provider,
@@ -150,9 +157,10 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
     },
   }
 
-  for (const key of targetOptions) {
-    if (key in presetQuestions) {
-      questions.push(presetQuestions[key])
+  for (const key of Object.keys(presetQuestions)) {
+    const questionName = key as Setting.OptionsInputKeysExcept<'env'>
+    if (targetOptions.includes(questionName)) {
+      questions.push(presetQuestions[questionName])
     }
   }
 
@@ -170,7 +178,7 @@ export function getSettingFromCommand(): Setting.SourceCheckResult {
 
   program
     .option('--env <env>', '.env file path')
-    .option('-t, --tasks <tasks>', 'service tasks')
+    .option('-t, --tasks <tasks...>', 'service tasks')
     .option('-p, --pattern <pattern>', 'pattern to match')
     .option('-d, --dirs <dirs...>', 'directories to match')
     .option('-e, --exts <exts...>', 'extensions to match')
@@ -205,17 +213,27 @@ export function getSettingFromEnv(filePath: PathLike | null): Setting.SourceChec
   }
 }
 
-export function validateSettings(settings: Setting.NullableInputOptions): Setting.ValueValidateResult {
+export function validateSettings(options: Setting.NullableInputOptions): Setting.ValueValidateResult {
   const unsetSettings = [] as Setting.OptionsInputKeysExcept<'env'>[]
   const invalidSettings = [] as Setting.OptionsInputKeysExcept<'env'>[]
 
-  Object.keys(settings).forEach((key) => {
-    if (!settings[key as Setting.OptionsKeys]) {
+  Object.keys(options).forEach((key) => {
+    if (!options[key as Setting.OptionsKeys]) {
       unsetSettings.push(key as Setting.OptionsInputKeysExcept<'env'>)
     }
   })
 
-  if (settings.pattern && !settings.pattern.includes('%key%')) {
+  if (options.tasks && typeof options.tasks === 'string') {
+    options.tasks = options.tasks.split(',').map(task => task.trim()) as Setting.Options['tasks']
+    for (const task of options.tasks) {
+      if (!(['extract', 'translate']).includes(task)) {
+        invalidSettings.push('tasks')
+        break
+      }
+    }
+  }
+
+  if (options.pattern && !options.pattern.includes('%key%')) {
     invalidSettings.push('pattern')
   }
 
@@ -225,14 +243,23 @@ export function validateSettings(settings: Setting.NullableInputOptions): Settin
   }
 }
 
-export function standardizeOptions(options: Setting.InputOptions): Setting.Options {
+export function standardizeOptions(options: Setting.NullableInputOptions): Setting.Options {
   const standardizedOptions: Setting.Options = { ...options as unknown as Setting.Options }
 
-  if (Object.prototype.toString.call(options.pattern) !== '[object RegExp]') {
+  if (options.pattern && Object.prototype.toString.call(options.pattern) !== '[object RegExp]') {
     standardizedOptions.pattern = createRegexFromTemplate(options.pattern) as RegExp
   }
 
-  if (typeof options.dirs === 'string') {
+  if (options.tasks && typeof options.tasks === 'string') {
+    if (options.tasks.includes(',')) {
+      standardizedOptions.tasks = options.tasks.split(',').map(dir => dir.trim()) as Setting.Options['tasks']
+    }
+    else {
+      standardizedOptions.tasks = [options.tasks.trim()] as Setting.Options['tasks']
+    }
+  }
+
+  if (options.dirs && typeof options.dirs === 'string') {
     if (options.dirs.includes(',')) {
       standardizedOptions.dirs = options.dirs.split(',').map(dir => dir.trim())
     }
@@ -241,7 +268,7 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
     }
   }
 
-  if (typeof options.exts === 'string') {
+  if (options.exts && typeof options.exts === 'string') {
     if (options.exts.includes(',')) {
       standardizedOptions.exts = options.exts.split(',').map((ext) => {
         return ext.trim().startsWith('.') ? ext : `.${ext}`
@@ -257,7 +284,7 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
     })
   }
 
-  if (typeof options.languages === 'string') {
+  if (options.languages && typeof options.languages === 'string') {
     if (options.languages.includes(',')) {
       standardizedOptions.languages = options.languages.split(',').map((lang) => {
         return lang.trim().toLowerCase()
@@ -273,11 +300,11 @@ export function standardizeOptions(options: Setting.InputOptions): Setting.Optio
     }) as Translator.Language[]
   }
 
-  if (typeof options.output === 'string') {
+  if (options.output && typeof options.output === 'string') {
     standardizedOptions.output = path.resolve(options.output)
   }
 
-  if (typeof options.env === 'string') {
+  if (options.env && typeof options.env === 'string') {
     standardizedOptions.env = path.resolve(options.env)
   }
 

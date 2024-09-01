@@ -17,7 +17,7 @@ namespace Setting {
   }
 
   export interface InputOptions {
-    tasks: Task[]
+    tasks: string[] | string
     env: string | PathLike
     pattern: string
     dirs: string[] | string

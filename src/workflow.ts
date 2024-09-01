@@ -49,7 +49,7 @@ export class Workflow {
   }
 
   async initState() {
-    logger.info.tag('initializing').appendDivider('-').message('set default setting').data(this.defaultSettings).print()
+    logger.info.tag('initializing').appendDivider('-').message('set default setting').print()
   }
 
   async getSettingsState() {
