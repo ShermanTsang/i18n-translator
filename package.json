@@ -1,5 +1,5 @@
 {
-  "name": "@shermant/i18n-tranlator",
+  "name": "@shermant/i18n-traslator",
   "version": "1.1.1",
   "author": "ShermanT",
   "main": ".output/dist/index.js",
@@ -18,7 +18,7 @@
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
   },
   "bin": {
-    "traslator": "bin/index.js"
+    "i18n-traslator": "bin/index.js"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.20.0",
