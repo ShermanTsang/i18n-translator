@@ -1,10 +1,7 @@
 # i18n-translator
 
-___
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/ShermanTsang/i18n-translator?label=version)
-
 ![Build Status](https://github.com/ShermanTsang/i18n-translator/actions/workflows/npm-publish.yml/badge.svg)
-
 ![npm](https://img.shields.io/npm/dt/@shermant/logger)
 
 I initially created this translation tool for one of my other projects to reduce the time spent translating i18n files.
