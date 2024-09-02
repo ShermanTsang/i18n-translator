@@ -249,8 +249,9 @@ export class Translator {
         this._response[lang] = await axios(requestingConfig)
       }
       catch (error) {
-        logger.error.tag('Translating').message(`Translate language [[${lang}]] request failed`).data(error).print()
-        throw error
+        logger.error.tag('Translating').message(`Translate language [[${lang}]] request failed`).print()
+        this.state = 'ERROR'
+        throw new Error(`Translate language request failed`)
       }
     }
     this.state = 'HANDLE_RESPONSE'
