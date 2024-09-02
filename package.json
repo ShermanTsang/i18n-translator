@@ -1,5 +1,5 @@
 {
-  "name": "@shermant/translation-generator",
+  "name": "@shermant/i18n-tranlator",
   "version": "1.1.0",
   "author": "ShermanT",
   "main": ".output/dist/index.js",
