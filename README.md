@@ -7,62 +7,58 @@ ___
 
 ![npm](https://img.shields.io/npm/dt/@shermant/logger)
 
-Initially, I want to write a translation tool for my own another project to reduce the time wasted jobs to translate
-i18n files.
+I initially created this translation tool for one of my other projects to reduce the time spent translating i18n files.
 
-When I developed this project, I try to make it easy to use and apply for general handling i18n sceneries.
+While developing this project, I aimed to make it user-friendly and versatile for general i18n use cases.
 
-If this tool can help you, It's my pleasure.
+If this tool helps you, it would be my pleasure.
 
 ## Feature
 
-- 🤖 Use AI service to translate
-- 👁️ Monitor the files change to rerun
-- 🙌 Run aside with your project
+- 🤖 Utilize AI services for translation
+- 👁️ Monitor file changes for automatic re-execution
+- 🙌 Run alongside your project with ease
 
 ## Task
 
 ### 🔎 Extract
 
-According to the given path, extract the i18n files and save them into the given output path.
+Extract i18n files from the specified path and save them to the designated output directory.
 
 ### 📚 Translate
 
-With AI services, translate the given i18n files and save them into the given output path.
+Translate i18n files using AI services and save the results to the specified output directory.
 
 ## Configuration
 
 ### Options
 
-| task      | name     | description                                                                                                             |
-|-----------|----------|-------------------------------------------------------------------------------------------------------------------------|
-| common    | tasks    | The tasks you want to execute.<br/>Any task can run alone.                                                              |
-| extract   | pattern  | Receiving both `RegExp` or `string`.<br/>Require including `%key%` to indicate variable                                 |
-| extract   | dirs     | The target directories to work                                                                                          |
-| extract   | exts     | Only to execute on files with the given extensions.<br/>Require do not including `.` sign                               |
-| common    | output   | The place to put output files                                                                                           |
-| common    | langs    | Languages you eager to support in your project                                                                          |
-| translate | provider | Who is the AI service provider                                                                                          |
-| translate | key      | You need API token to access AI service                                                                                 |
-| common    | watch    | The tool can monitor your files changes continually.<br/>You can pass any value to this option to enable watching mode. |
+| task      | name     | description                                                                                      |
+|-----------|----------|--------------------------------------------------------------------------------------------------|
+| common    | tasks    | The tasks you want to execute.<br/>Any task can be run individually.                             |
+| extract   | pattern  | Accepts both RegExp or string.<br/>Must include %key% to indicate a variable.                    |
+| extract   | dirs     | The target directories for the operation.                                                        |
+| extract   | exts     | Only executes on files with the specified extensions.<br/>Do not include the . in the extension. |
+| common    | output   | The directory where output files will be saved.                                                  |
+| common    | langs    | The languages you wish to support in your project.                                               |
+| translate | provider | The AI service provider.                                                                         |
+| translate | key      | The API token required to access the AI service.                                                 |
+| common    | watch    | Enables file monitoring for continuous execution.<br/>Pass any value to enable watching mode.    |
 
 ### Source
 
-Supporting three ways to set your configurations.
-
-Program will read and merge your configurations with the following order:
+You can configure the tool using three different methods, with the settings being read and merged in the following
+order:
 
 1. `.env` file
-2. command line parameters
-3. inquirer
+2. Command line parameters
+3. Inquirer prompts
 
-Learn more, you can find more details in `src/workflow.ts` file
+For more details, refer to the `src/workflow.ts` file.
 
 #### 1. `.env` file
 
-You can write some options in your project `.env` file.
-
-Using `TRANSLATION_` as prefix to set configurations.
+You can specify options in your project’s `.env` file using the `TRANSLATION_` prefix.
 
 For example:
 
@@ -74,29 +70,29 @@ TRANSLATOR_TEST=111
 TRANSLATOR_KEY=sk-5805c22222228aad2d5386e877fa
 ```
 
-Remember to use `uppercase` and `snakecase` to express an option.
+Ensure that all options are in `UPPERCASE` and `SNAKE_CASE`.
 
 #### 2. command line parameters
 
-When you use command line to run the project, you can use `--option` to set configurations.
+When running the project from the command line, you can use `--option` to set configurations.
 
 ```bash
 npx @shermant/i18n-translator --pattern=tttt --exts vue js --watch
 ```
 
-Notice: the settings in command line will override the settings in `.env` file.
+Note: Command line settings will override those in the .env file.
 
 #### 3. inquirer
 
-According to the tasks you choose, program will check the options you need to set before executing.
+Based on the selected tasks, the program will check which options need to be set before execution.
 
-If there are some options you need to set, program will run into inquirer flow to ask you to input them.
+If any options are missing, the program will prompt you to input them through an inquirer flow.
 
 ### Provider
 
-Now (2024-09-02), the project only support `deepseek` as the provider.
+As of 2024-09-02, the project supports `deepseek` as the AI service provider.
 
-In the future, I plan to integrate `LangChain` to support variety AI service providers.
+In the future, I plan to integrate `LangChain` to support a variety of AI service providers.
 
 ## Usage
 
@@ -104,4 +100,7 @@ In the future, I plan to integrate `LangChain` to support variety AI service pro
 npx @shermant/i18n-translator
 bunx @shermant/i18n-translator
 ```
+
+This version is more polished and clearer, ensuring proper grammar and consistent formatting.
+
 
