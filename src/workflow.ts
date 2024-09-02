@@ -31,21 +31,29 @@ export class Workflow {
   }
 
   async run() {
-    await this.initState()
-    await this.getSettingsState()
-    await this.validateSettingsState()
-    await this.completeSettingsState()
-    this.finalizeSettingsState()
-    if (this.finalSettings.tasks.includes('extract')) {
-      await this.extractKeysState()
-      this.saveResultState()
-    }
-    if (this.finalSettings.tasks.includes('translate')) {
-      await this.translateFilesState()
-    }
-    if (this.finalSettings.watch) {
-      this.setupFileWatcher()
-    }
+    logger.info.prependDivider('#').appendDivider('#').message(`
+    
+    👋 Hi, here is @shermant/[[i18n-translator]]
+    😉 Have fun to use this tool!
+    
+    `, ['green']).print()
+    setTimeout(async () => {
+      await this.initState()
+      await this.getSettingsState()
+      await this.validateSettingsState()
+      await this.completeSettingsState()
+      this.finalizeSettingsState()
+      if (this.finalSettings.tasks.includes('extract')) {
+        await this.extractKeysState()
+        this.saveResultState()
+      }
+      if (this.finalSettings.tasks.includes('translate')) {
+        await this.translateFilesState()
+      }
+      if (this.finalSettings.watch) {
+        this.setupFileWatcher()
+      }
+    }, 2000)
   }
 
   async initState() {
