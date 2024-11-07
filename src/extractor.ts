@@ -2,11 +2,14 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import chalk from 'chalk'
 import { logger } from '@shermant/logger'
+import cliProgress from 'cli-progress'
+import { sleep } from './utils.ts'
 
 export class Extractor {
   private state: Extractor.State = 'INIT'
   private context: Extractor.Context
   private verboseMode: boolean = true
+  private progressBar: cliProgress.SingleBar
 
   constructor(private pattern: RegExp, private directory: string, private extensions: string[]) {
     this.context = {
@@ -16,6 +19,12 @@ export class Extractor {
       currentFindKeys: [],
       currentContent: '',
     }
+    this.progressBar = new cliProgress.SingleBar({
+      format: `|${chalk.cyan('{bar}')}| {percentage}% | {value}/{total} Files | CurrentFile: {file}`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true,
+    })
   }
 
   setVerboseMode(mode: boolean) {
@@ -35,7 +44,7 @@ export class Extractor {
           this.processContent()
           break
         case 'LOG_RESULTS':
-          this.logResults()
+          await this.logResults()
           break
       }
     }
@@ -61,6 +70,9 @@ export class Extractor {
   private async init() {
     this.context.files = await this.walk(this.directory, this.extensions, [])
     this.state = this.context.files.length > 0 ? 'READ_FILE' : 'DONE'
+    this.progressBar.start(this.context.files.length, 0, {
+      file: 'N/A',
+    })
   }
 
   private async readFile() {
@@ -73,7 +85,7 @@ export class Extractor {
     this.context.currentContent = await fs.readFile(filePath, 'utf-8')
     this.state = 'PROCESS_CONTENT'
 
-    logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print(this.verboseMode)
+    // logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print(this.verboseMode)
   }
 
   private processContent() {
@@ -91,22 +103,30 @@ export class Extractor {
     this.state = 'LOG_RESULTS'
   }
 
-  private logResults() {
-    const currentFindKeys = this.context.currentFindKeys
+  private async logResults() {
+    // const currentFindKeys = this.context.currentFindKeys
 
-    if (currentFindKeys.length > 0) {
-      logger.success.tag('Locating').message(`Find key: ${
-                currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
-            }`).print(this.verboseMode)
-    }
-    else if (this.context.currentContent) {
-      logger.info.tag('Locating').message(`No matched key`).print(this.verboseMode)
-    }
-    else {
-      logger.warn.tag('Checking').message(`The file is empty`).print(this.verboseMode)
-    }
+    // if (currentFindKeys.length > 0) {
+    //   logger.success.tag('Locating').message(`Find key: ${
+    //             currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
+    //         }`).print(this.verboseMode)
+    // }
+    // else if (this.context.currentContent) {
+    //   logger.info.tag('Locating').message(`No matched key`).print(this.verboseMode)
+    // }
+    // else {
+    //   logger.warn.tag('check file').message(`The file is empty`).print(this.verboseMode)
+    // }
 
-    this.verboseMode && logger.plain.divider('-')
+    this.progressBar.update(this.context.currentFileIndex + 1, {
+      file: this.context.files[this.context.currentFileIndex],
+    })
+
+    await sleep(10)
+
+    if (this.context.currentFileIndex >= this.context.files.length) {
+      this.progressBar.stop()
+    }
     this.context.currentFileIndex += 1
     this.state = 'READ_FILE'
   }

@@ -64,7 +64,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       ],
     },
     pattern: {
-      type: 'text',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('extract')) {
+          return null
+        }
+        return 'text'
+      },
       name: 'pattern',
       message: `Enter the pattern to search for, use ${chalk.yellow.underline('%key%')} to express ${chalk.yellow.underline('variables')}`,
       initial: `t('%key%')`,
@@ -78,7 +83,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       format: (value: string) => createRegexFromTemplate(value),
     },
     dirs: {
-      type: 'multiselect',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('extract')) {
+          return null
+        }
+        return 'multiselect'
+      },
       name: 'dirs',
       message: 'Select the dirs to extract translation keys from',
       instructions: true,
@@ -90,7 +100,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       min: 1,
     },
     exts: {
-      type: 'autocompleteMultiselect',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('extract')) {
+          return null
+        }
+        return 'autocompleteMultiselect'
+      },
       name: 'exts',
       message: 'Select the file extensions to extract keys from',
       instructions: true,
@@ -130,7 +145,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       inactive: 'no',
     },
     languages: {
-      type: 'autocompleteMultiselect',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('translate')) {
+          return null
+        }
+        return 'autocompleteMultiselect'
+      },
       name: 'languages',
       message: 'Select the languages to translate',
       instructions: true,
@@ -141,7 +161,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       min: 1,
     },
     provider: {
-      type: 'select',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('translate')) {
+          return null
+        }
+        return 'select'
+      },
       name: 'provider',
       message: 'Choose the translation provider',
       instructions: true,
@@ -151,7 +176,12 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       })),
     },
     key: {
-      type: 'text',
+      type: (_prev, values) => {
+        if (!values.tasks?.includes('translate')) {
+          return null
+        }
+        return 'text'
+      },
       name: 'key',
       message: 'Enter the translation service key',
     },
@@ -166,10 +196,11 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
 
   const options = await prompts(questions, {
     onCancel: () => {
-      logger.failure.tag('Exiting').message('User cancelled the operation').print()
+      logger.failure.tag('exit program').message('User cancelled the operation').print()
       process.exit(1)
     },
   }) as Setting.InputOptions
+
   return { hasConfig: true, options }
 }
 
@@ -186,6 +217,7 @@ export function getSettingFromCommand(): Setting.SourceCheckResult {
     .option('-l, --langs <languages...>', 'target translating languages')
     .option('-pr, --provider <provider>', 'translating service provider')
     .option('-k, --key <key>', 'translating service API key')
+    .option('-v, --verbose <key>', 'print the details of processing for debugging', false)
     .option('--watch', 'enable watching mode', true)
     .parse(process.argv)
 

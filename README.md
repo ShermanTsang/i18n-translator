@@ -33,11 +33,11 @@ Translate i18n files using AI services and save the results to the specified out
 | task      | name     | description                                                                                      |
 |-----------|----------|--------------------------------------------------------------------------------------------------|
 | common    | tasks    | The tasks you want to execute.<br/>Any task can be run individually.                             |
-| extract   | pattern  | Accepts both RegExp or string.<br/>Must include %key% to indicate a variable.                    |
+| extract   | pattern  | Accepts RegExp or string.<br/>Must include %key% to indicate a variable.                         |
 | extract   | dirs     | The target directories for the operation.                                                        |
 | extract   | exts     | Only executes on files with the specified extensions.<br/>Do not include the . in the extension. |
 | common    | output   | The directory where output files will be saved.                                                  |
-| common    | langs    | The languages you wish to support in your project.                                               |
+| translate | langs    | The languages you wish to support in your project.                                               |
 | translate | provider | The AI service provider.                                                                         |
 | translate | key      | The API token required to access the AI service.                                                 |
 | common    | watch    | Enables file monitoring for continuous execution.<br/>Pass any value to enable watching mode.    |
