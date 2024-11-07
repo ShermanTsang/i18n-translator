@@ -30,38 +30,48 @@ export class Workflow {
     this.sortedKeys = []
   }
 
-  async run() {
+  welcomeState() {
     logger.info.prependDivider('#').appendDivider('#').message(`
     
     👋 Hi, this is a tool named @shermant/[[i18n-translator]]
     😉 This tool can help you [[extract]] and [[translate]] i18n text.
     
     `, ['green']).print()
-    setTimeout(async () => {
-      await this.initState()
-      await this.getSettingsState()
+  }
+
+  async run() {
+    this.welcomeState()
+    await sleep(2000)
+    await this.initState()
+    await sleep(500)
+    await this.getSettingsState()
+    await sleep(1000)
+    await this.validateSettingsState()
+    await sleep(1000)
+    await this.completeSettingsState()
+    await sleep(1000)
+    this.finalizeSettingsState()
+
+    if (this.finalSettings.tasks.includes('extract')) {
       await sleep(1000)
-      await this.validateSettingsState()
+      await this.extractKeysState()
+      this.saveResultState()
+    }
+
+    if (this.finalSettings.tasks.includes('translate')) {
       await sleep(1000)
-      await this.completeSettingsState()
-      await sleep(1000)
-      this.finalizeSettingsState()
-      if (this.finalSettings.tasks.includes('extract')) {
-        await this.extractKeysState()
-        this.saveResultState()
-      }
-      if (this.finalSettings.tasks.includes('translate')) {
-        await this.translateFilesState()
-      }
-      if (this.finalSettings.watch) {
-        this.setupFileWatcher()
-      }
-    }, 2000)
+      await this.translateFilesState()
+    }
+
+    if (this.finalSettings.watch) {
+      logger.info.tag('launch monitor').time(true).prependDivider('-').message(`file watcher will start within [[5]] seconds`).print()
+      await sleep(5000)
+      this.setupFileWatcher()
+    }
   }
 
   async initState() {
     logger.info.tag('load default settings').appendDivider('-').message('read default setting').print()
-    await sleep(1000)
   }
 
   async getSettingsState() {
@@ -201,28 +211,25 @@ ${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${v
     }
   }
 
-  setupFileWatcher(delaySeconds: number = 5) {
-    logger.info.tag('launch monitor').time(true).prependDivider('-').message(`file watcher will start within [[${delaySeconds}]] seconds`).print()
-    setTimeout(() => {
-      const watcher = chokidar.watch(this.finalSettings.dirs, {
-        ignored: /(^|[/\\])\../, // ignore dotfiles
-        persistent: true,
-      })
+  setupFileWatcher() {
+    const watcher = chokidar.watch(this.finalSettings.dirs, {
+      ignored: /(^|[/\\])\../, // ignore dotfiles
+      persistent: true,
+    })
 
-      console.clear()
-      logger.info.tag('monitor changes').time(true).prependDivider('-').appendDivider('-').message(`👁️Watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`).print()
+    // console.clear()
+    logger.info.tag('monitor changes').time(true).prependDivider('-').appendDivider('-').message(`👁️Watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`).print()
 
-      watcher.on('change', async (path) => {
-        logger.info.tag('detect changes').time(true).message(`file ${chalk.underline.yellow(path)} has been changed`).appendDivider('-').print()
-        this.finalSettings.tasks.includes('extract') && await this.extractKeysState(false)
-        this.saveResultState()
-        this.finalSettings.tasks.includes('translate') && await this.translateFilesState()
-      })
+    watcher.on('change', async (path) => {
+      logger.info.tag('detect changes').time(true).message(`file ${chalk.underline.yellow(path)} has been changed`).appendDivider('-').print()
+      this.finalSettings.tasks.includes('extract') && await this.extractKeysState(false)
+      this.saveResultState()
+      this.finalSettings.tasks.includes('translate') && await this.translateFilesState()
+    })
 
-      watcher.on('error', (error) => {
-        logger.error.tag('monitor error').time(true).message(`Watcher error: ${error}`).print()
-      })
-    }, delaySeconds * 1000)
+    watcher.on('error', (error) => {
+      logger.error.tag('monitor error').time(true).message(`Watcher error: ${error}`).print()
+    })
   }
 
   async translateFilesState() {
