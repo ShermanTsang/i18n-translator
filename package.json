@@ -1,6 +1,6 @@
 {
   "name": "@shermant/i18n-translator",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "ShermanT",
   "main": ".output/dist/index.js",
   "types": ".output/dist/index.d.ts",
