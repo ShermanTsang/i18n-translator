@@ -95,3 +95,12 @@ export function transformArrayToObject(keys: string[]) {
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+export function chunkArray(array: any[], chunkSize: number) {
+  return array.reduce((result, _currentValue, currentIndex) => {
+    if (currentIndex % chunkSize === 0) {
+      result.push(array.slice(currentIndex, currentIndex + chunkSize))
+    }
+    return result
+  }, [])
+}

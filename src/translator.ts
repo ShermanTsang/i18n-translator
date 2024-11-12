@@ -4,6 +4,9 @@ import process, { cwd } from 'node:process'
 import axios from 'axios'
 import { logger } from '@shermant/logger'
 import JSON5 from 'json5'
+import cliProgress from 'cli-progress'
+import chalk from 'chalk'
+import { sleep } from './utils.ts'
 
 export class Translator {
   static readonly providers = ['deepseek']
@@ -55,6 +58,16 @@ export class Translator {
     'mr': 'Marathi',
   }
 
+  protected static readonly processes = {
+    AWAIT: 0,
+    REQUEST: 1,
+    HANDLE_RESPONSE: 2,
+    EXTRACT_JSON: 3,
+    SAVE_FILE: 4,
+    DONE: 5,
+    ERROR: 5,
+  }
+
   protected static readonly languageMap = new Map(Object.entries(Translator.languages))
 
   protected translatedContent = {} as Record<Translator.Language, Translator.JsonContent>
@@ -71,6 +84,8 @@ export class Translator {
   }
 
   private _response = {} as Record<Translator.Language, any>
+
+  private progressBars = {} as Record<Translator.Language, cliProgress.SingleBar>
 
   constructor(apiEndpoint: string, apiKey: string, inputFilePath: string) {
     this.apiKey = apiKey
@@ -89,7 +104,6 @@ export class Translator {
 
   protected set state(state: Translator.State) {
     this._state = state
-    logger.info.tag('Translating').message(`start process [[${String(state).replace('_', ' ')}]]`).time().print()
   }
 
   protected get requestMethod() {
@@ -184,7 +198,9 @@ export class Translator {
           data[lang] = JSON.stringify(rawData) as unknown as string
         }
         catch (error) {
-          logger.error.tag('generate request data').message('Invalid request data').data(error).print()
+          this.progressBars[lang].update(Translator.processes.ERROR, { lang, step: 'ERROR' })
+          this.progressBars[lang].stop()
+          // logger.error.tag('generate request data').message('Invalid request data').data(error).print()
           process.exit(1)
         }
       }
@@ -201,8 +217,26 @@ export class Translator {
     fs.writeFileSync(filePath, data, 'utf8')
   }
 
-  async translate(languages: Translator.Language[]) {
+  async run(languages: Translator.Language[]) {
     this.languages = languages
+
+    logger.info.tag('start translation').message(`🪢 the process includes ${Object.keys(Translator.processes).map(process => `[[${String(process).toLowerCase()}]] `)}`).print()
+
+    const multiBar = new cliProgress.MultiBar({
+      clearOnComplete: false,
+      hideCursor: true,
+      format: `| ${chalk.cyan('{bar}')} | {lang} | {step}`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+    }, cliProgress.Presets.shades_grey)
+
+    this.languages.forEach((lang) => {
+      this.progressBars[lang] = multiBar.create(
+        Math.max(Math.max(...Object.values(Translator.processes))),
+        Translator.processes.AWAIT,
+        { lang, step: 'AWAIT' },
+      )
+    })
 
     while (this.state !== 'DONE') {
       switch (this.state) {
@@ -234,7 +268,6 @@ export class Translator {
   protected async request(): Promise<any> {
     for (const lang of this.languages) {
       try {
-        logger.info.tag('requesting').message(`🪢 requesting translation for language [[${Translator.languageMap.get(lang)} ( ${lang} )]]`).appendDivider('-').print()
         const requestingConfig = {
           method: this._config.requestMethod || 'post',
           maxBodyLength: Infinity,
@@ -247,9 +280,11 @@ export class Translator {
           data: this.requestData[lang],
         }
         this._response[lang] = await axios(requestingConfig)
+        this.progressBars[lang].update(Translator.processes.REQUEST, { lang, step: 'REQUEST' })
+        await sleep(200)
       }
       catch (error) {
-        logger.error.tag('Translating').message(`Translate language [[${lang}]] request failed`).print()
+        logger.error.tag('Translating').message(`Translate language [[${lang}]] request failed`).data(JSON.stringify(error)).print()
         this.state = 'ERROR'
         throw new Error(`Translate language request failed`)
       }
@@ -258,8 +293,10 @@ export class Translator {
   }
 
   protected handleResponse(response: any = this._response) {
-    this.languages.forEach((lang) => {
+    this.languages.forEach(async (lang) => {
       if (this.responseHandler) {
+        this.progressBars[lang].update(Translator.processes.HANDLE_RESPONSE, { lang, step: 'HANDLE_RESPONSE' })
+        await sleep(200)
         this._response[lang] = this.responseHandler(response[lang])
       }
     })
@@ -267,8 +304,10 @@ export class Translator {
   }
 
   protected extractJson(rawText: Record<Translator.Language, any> = this._response) {
-    this.languages.forEach((lang) => {
-      let content = null
+    this.languages.forEach(async (lang) => {
+      this.progressBars[lang].update(Translator.processes.EXTRACT_JSON, { lang, step: 'EXTRACT_JSON' })
+      await sleep(200)
+      let content
 
       let match = rawText[lang].match(/\{[\s\S]*\}/)
       if (match) {
@@ -304,9 +343,15 @@ export class Translator {
   }
 
   protected saveTranslatedFile() {
-    this.languages.forEach((lang) => {
+    this.languages.forEach(async (lang) => {
+      this.progressBars[lang].update(Translator.processes.SAVE_FILE, { lang, step: 'SAVE_FILE' })
+      await sleep(200)
       const filePath = path.join(this.outputDir, `lang.${lang}.json`)
       Translator.writeJsonFile(filePath, this.translatedContent[lang])
+
+      await sleep(200)
+      this.progressBars[lang].update(Translator.processes.DONE, { lang, step: 'DONE' })
+      this.progressBars[lang].stop()
     })
     this.state = 'DONE'
   }

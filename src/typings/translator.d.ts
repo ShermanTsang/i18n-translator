@@ -1,6 +1,6 @@
 namespace Translator {
   export type State =
-    | 'REQUEST'
+    'REQUEST'
     | 'HANDLE_RESPONSE'
     | 'EXTRACT_JSON'
     | 'SAVE_FILE'

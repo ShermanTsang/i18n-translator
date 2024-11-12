@@ -47,7 +47,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       type: 'multiselect',
       name: 'tasks',
       message: 'Select the tasks to run',
-      instructions: true,
+      instructions: false,
       choices: [
         {
           title: '🔎 Search and extract i18n keys',
@@ -91,7 +91,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       },
       name: 'dirs',
       message: 'Select the dirs to extract translation keys from',
-      instructions: true,
+      instructions: false,
       choices: subDirs.map(subDir => ({
         title: subDir,
         value: path.join(currentDirectory, subDir),
@@ -108,7 +108,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       },
       name: 'exts',
       message: 'Select the file extensions to extract keys from',
-      instructions: true,
+      instructions: false,
       choices: (dirs: string[]) => {
         const extensionStatistics = getFileExtensionStatistics(dirs || currentOptions.dirs)
         const totalFiles = Object.values(extensionStatistics).reduce((acc, curr) => acc + curr, 0)
@@ -153,7 +153,7 @@ export async function getSettingFromInquirer(targetOptions: Setting.OptionsInput
       },
       name: 'languages',
       message: 'Select the languages to translate',
-      instructions: true,
+      instructions: false,
       choices: Object.entries(Translator.languages).map(([abbr, language]) => ({
         title: language,
         value: abbr,

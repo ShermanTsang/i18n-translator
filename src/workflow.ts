@@ -4,7 +4,7 @@ import * as process from 'node:process'
 import chalk from 'chalk'
 import { logger } from '@shermant/logger'
 import * as chokidar from 'chokidar'
-import { isDirectoryExists, sleep, transformArrayToObject } from './utils'
+import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
 import {
   defaultSettings,
   getSettingFromCommand,
@@ -184,9 +184,9 @@ ${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${v
       console.log(`\n`)
       logger.info.tag('report result').message(`🥳 Found [[${this.sortedKeys.length}]] keys in total`).appendDivider().print()
       if (this.sortedKeys.length > 0) {
-        logger.success.tag('list keys').message(`👉 Extracted keys list:         
-[[${this.sortedKeys.join(']]  [[')}]]
-\n`,
+        logger.success.tag('list keys').message(`👉 Extracted keys list:
+${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `[[${item}]]`).join(' / ')}`).join('\n')}
+      \n`,
         ).appendDivider().print()
       }
     }
@@ -217,7 +217,7 @@ ${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${v
       persistent: true,
     })
 
-    // console.clear()
+    console.log('\n')
     logger.info.tag('monitor changes').time(true).prependDivider('-').appendDivider('-').message(`👁️Watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`).print()
 
     watcher.on('change', async (path) => {
@@ -245,6 +245,6 @@ ${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${v
       return
     }
     const translator = new (Provider)(this.finalSettings.key, this.finalSettings.output)
-    await translator.translate(this.finalSettings.languages)
+    await translator.run(this.finalSettings.languages)
   }
 }

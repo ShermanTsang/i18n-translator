@@ -125,6 +125,9 @@ export class Extractor {
     await sleep(10)
 
     if (this.context.currentFileIndex >= this.context.files.length) {
+      this.progressBar.update(this.context.files.length, {
+        file: 'done',
+      })
       this.progressBar.stop()
     }
     this.context.currentFileIndex += 1
