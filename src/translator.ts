@@ -9,7 +9,7 @@ import chalk from 'chalk'
 import { sleep } from './utils.ts'
 
 export class Translator {
-  static readonly providers = ['deepseek']
+  static readonly providers = ['deepseek', 'openai']
 
   static readonly languages = {
     'en': 'English',

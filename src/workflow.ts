@@ -15,6 +15,7 @@ import {
 } from './setting.ts'
 import { Extractor } from './extractor.ts'
 import { DeepseekTranslator } from './providers/deepseek.ts'
+import { OpenAITranslator } from './providers/openai.ts'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -238,6 +239,7 @@ ${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `
     }
     const providerMap = new Map([
       ['deepseek', DeepseekTranslator],
+      ['openai', OpenAITranslator],
     ])
     const Provider = providerMap.get(this.finalSettings.provider)
     if (!Provider) {
