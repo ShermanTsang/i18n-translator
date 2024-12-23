@@ -1,4 +1,3 @@
-/* eslint-disable import/order */
 import { logger } from '@shermant/logger'
 import chalk from 'chalk'
 import * as chokidar from 'chokidar'
@@ -14,8 +13,10 @@ import {
   validateSettings,
 } from './configurator/index.ts'
 import { Extractor } from './extractor/index.ts'
-import { OpenAITranslator } from './translator/providers/openai.ts'
+
 import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
+import type { Translator as TranslatorProvider } from './translator/index.ts'
+import { DeepSeekTranslator, OpenAITranslator } from './translator/providers.ts'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -237,9 +238,9 @@ ${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `
     if (!this.finalSettings.key) {
       logger.error.tag('check API key').message(`Key is not provided`).print()
     }
-    const providerMap = new Map<string, new (apiKey: string, inputFilePath: string) => OpenAITranslator>([
+    const providerMap = new Map<string, new (apiKey: string, inputFilePath: string) => TranslatorProvider>([
       ['openai', OpenAITranslator],
-      ['deepseek', OpenAITranslator],
+      ['deepseek', DeepSeekTranslator],
     ])
     const Provider = providerMap.get(this.finalSettings.provider)
     if (!Provider) {

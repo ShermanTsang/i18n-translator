@@ -15,13 +15,12 @@ interface DeepseekChatModelOptions extends BaseChatModelCallOptions {}
 interface DeepseekChatModelParams extends BaseChatModelParams {
   apiKey: string
   modelName?: string
-  temperature?: number
+  stream?: boolean
 }
 
 class DeepSeekChatModel extends BaseChatModel<DeepseekChatModelOptions> {
   apiKey: string
   modelName: string
-  temperature: number
 
   _llmType(): string {
     return 'deepseek_chat_model'
@@ -35,18 +34,17 @@ class DeepSeekChatModel extends BaseChatModel<DeepseekChatModelOptions> {
     super(fields)
     this.apiKey = fields.apiKey
     this.modelName = fields.modelName || 'deepseek-chat'
-    this.temperature = fields.temperature || 0.7
   }
 
   async _generate(messages: BaseMessage[]): Promise<any> {
     // Format messages for DeepSeek API
     const formattedMessages = messages.map(msg => ({
-      role: msg._getType(),
+      role: msg.getType() === 'human' ? 'user' : msg.getType(),
       content: msg.content,
     }))
 
     // Make API call to DeepSeek
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +53,7 @@ class DeepSeekChatModel extends BaseChatModel<DeepseekChatModelOptions> {
       body: JSON.stringify({
         model: this.modelName,
         messages: formattedMessages,
-        temperature: this.temperature,
+        stream: false,
       }),
     })
 

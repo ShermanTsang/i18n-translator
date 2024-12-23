@@ -1,15 +1,18 @@
+import type { BaseLanguageModel } from '@langchain/core/language_models/base'
+import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { logger } from '@shermant/logger'
 import chalk from 'chalk'
 import cliProgress from 'cli-progress'
-import fs from 'node:fs'
+import JSON5 from 'json5'
+import fs, { type PathLike } from 'node:fs'
 import path from 'node:path'
-import process from 'node:process'
+import process, { cwd } from 'node:process'
 import { sleep } from '../utils.ts'
 
-export class Translator {
+export abstract class Translator {
   static readonly providers = ['deepseek', 'openai']
 
-  static readonly languages: { [key: string]: string } = {
+  static readonly languages = {
     'en': 'English',
     'fr': 'French',
     'de': 'German',
@@ -56,80 +59,236 @@ export class Translator {
     'mr': 'Marathi',
   }
 
-  protected readonly apiKey: string
-  protected readonly inputFilePath: string
-  protected readonly outputDir: string
+  static readonly prompts = ChatPromptTemplate.fromMessages([
+    ['system', 'You are a translator to help user translate the json file written in english to another language, user will input target language and json file content'],
+    ['user', 'Target language is: {language}'],
+    ['user', 'Json file content is:\n{content}'],
+  ])
+
+  protected model!: BaseLanguageModel
+
+  protected static readonly processes = {
+    AWAIT: 0,
+    REQUEST: 1,
+    EXTRACT_JSON: 2,
+    SAVE_FILE: 3,
+    DONE: 4,
+    ERROR: 4,
+  }
+
+  protected static readonly languageMap = new Map(Object.entries(Translator.languages))
+
+  protected translatedContent = {} as Record<Translator.Language, Translator.JsonContent>
+  private _config: Translator.Config = {
+    apiKey: '',
+    languages: [],
+    inputFilePath: '',
+    outputDir: '',
+    originalFileContent: null,
+  }
+
+  protected abstract initializeModel(): void
+
+  private _response = {} as Record<Translator.Language, any>
+
+  private progressBars = {} as Record<Translator.Language, cliProgress.SingleBar>
 
   constructor(apiKey: string, inputFilePath: string) {
     this.apiKey = apiKey
     this.inputFilePath = inputFilePath
-    this.outputDir = path.dirname(inputFilePath)
   }
 
-  async run(languages: string[]) {
+  private _state?: Translator.State
+
+  protected get state() {
+    if (!this._state) {
+      this.state = 'REQUEST'
+    }
+    return this._state as Translator.State
+  }
+
+  protected set state(state: Translator.State) {
+    this._state = state
+  }
+
+  protected get apiKey() {
+    return this._config.apiKey
+  }
+
+  protected set apiKey(apiKey: string) {
+    this._config.apiKey = apiKey
+  }
+
+  protected get inputFilePath() {
+    return this._config.inputFilePath
+  }
+
+  protected set inputFilePath(inputFilePath: string) {
     try {
-      const originalFileContent = fs.readFileSync(this.inputFilePath, { encoding: 'utf-8' })
-      const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-      progressBar.start(languages.length, 0)
-
-      for (const language of languages) {
-        try {
-          const translatedContent = await this.translateContent(language, originalFileContent)
-          const outputFilePath = path.join(this.outputDir, `${path.basename(this.inputFilePath, '.json')}.${language}.json`)
-          fs.writeFileSync(outputFilePath, translatedContent)
-          progressBar.increment()
-          await sleep(1000)
-        }
-        catch (error) {
-          logger.error.tag('translate error').message(`${chalk.bgRed.white(' Error ')} Translation failed for language ${language}:`).print()
-          logger.error.tag('translate error').message(error as string).print()
-          process.exit(1)
-        }
-      }
-
-      progressBar.stop()
-      logger.success.tag('translate').message(`Translation completed`).appendDivider('-').print()
+      this._config.inputFilePath = path.resolve(cwd(), inputFilePath)
+      this.originalFileContent = Translator.readJsonFile(inputFilePath)
     }
     catch (error) {
-      logger.error.tag('translate error').message(`${chalk.bgRed.white(' Error ')} Translation failed:`).print()
-      logger.error.tag('translate error').message(error as string).print()
+      logger.error.tag('Translating').message('invalid inputFilePath').data(error).print()
       process.exit(1)
     }
   }
 
-  protected async translateContent(language: string, content: string): Promise<string> {
-    if (!Translator.languages[language]) {
-      throw new Error(`Unsupported language: ${language}`)
+  protected get outputDir() {
+    if (!this._config.outputDir && this.inputFilePath) {
+      this.outputDir = path.dirname(this.inputFilePath)
     }
+    return this._config.outputDir
+  }
 
-    try {
-      const jsonContent = JSON.parse(content)
-      const translatedContent = await this.translateObject(jsonContent, language)
-      return JSON.stringify(translatedContent, null, 2)
-    }
-    catch (error) {
-      throw new Error(`Failed to translate content: ${error as string}`)
+  protected set outputDir(outputDir: string) {
+    this._config.outputDir = outputDir
+  }
+
+  protected get originalFileContent() {
+    return this._config.originalFileContent as string
+  }
+
+  protected set originalFileContent(originalFileContent) {
+    this._config.originalFileContent = originalFileContent
+  }
+
+  protected get languages() {
+    return this._config.languages as Translator.Language[]
+  }
+
+  protected set languages(languages: Translator.Language[]) {
+    this._config.languages = languages
+  }
+
+  static readJsonFile(filePath: PathLike): string {
+    return fs.readFileSync(filePath, 'utf8')
+  }
+
+  static writeJsonFile(filePath: PathLike, content: Translator.JsonContent): void {
+    const data = JSON.stringify(content, null, 2)
+    fs.writeFileSync(filePath, data, 'utf8')
+  }
+
+  async run(languages: Translator.Language[]) {
+    this.languages = languages
+
+    logger.info.tag('start translation').message(`🪢  the process includes ${Object.keys(Translator.processes).map(process => `[[${String(process).toLowerCase()}]] `)}`).print()
+
+    const multiBar = new cliProgress.MultiBar({
+      clearOnComplete: false,
+      hideCursor: true,
+      format: `| ${chalk.cyan('{bar}')} | {lang} | {step}`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+    }, cliProgress.Presets.shades_grey)
+
+    this.languages.forEach((lang) => {
+      this.progressBars[lang] = multiBar.create(
+        Math.max(Math.max(...Object.values(Translator.processes))),
+        Translator.processes.AWAIT,
+        { lang, step: 'AWAIT' },
+      )
+    })
+
+    while (this.state !== 'DONE') {
+      switch (this.state) {
+        case 'REQUEST': {
+          await this.request()
+          break
+        }
+        case 'EXTRACT_JSON': {
+          this.extractJson()
+          break
+        }
+        case 'SAVE_FILE': {
+          this.saveTranslatedFile()
+          break
+        }
+        case 'ERROR': {
+          break
+        }
+        default:
+          break
+      }
     }
   }
 
-  protected async translateObject(obj: any, language: string): Promise<any> {
-    if (typeof obj === 'string') {
-      // Implement actual translation logic here based on provider
-      return obj // Placeholder - should be overridden by provider implementations
-    }
+  async translateContent(language: keyof typeof Translator.languages, content: string): Promise<string> {
+    const chain = Translator.prompts.pipe(this.model)
+    const response = await chain.invoke({
+      language: Translator.languages[language],
+      content,
+    })
+    return response.content
+  }
 
-    if (Array.isArray(obj)) {
-      return Promise.all(obj.map(item => this.translateObject(item, language)))
-    }
-
-    if (typeof obj === 'object' && obj !== null) {
-      const result: Record<string, any> = {}
-      for (const [key, value] of Object.entries(obj)) {
-        result[key] = await this.translateObject(value, language)
+  protected async request(): Promise<any> {
+    for (const lang of this.languages) {
+      try {
+        this._response[lang] = await this.translateContent(lang, this.originalFileContent)
+        this.progressBars[lang].update(Translator.processes.REQUEST, { lang, step: 'REQUEST' })
+        await sleep(200)
       }
-      return result
+      catch (error) {
+        logger.error.tag('Translating').message(`Translate language [[${lang}]] request failed`).data(JSON.stringify(error)).print()
+        this.state = 'ERROR'
+        throw new Error(`Translate language request failed`)
+      }
     }
+    this.state = 'EXTRACT_JSON'
+  }
 
-    return obj
+  protected extractJson(rawText: Record<Translator.Language, any> = this._response) {
+    this.languages.forEach(async (lang) => {
+      this.progressBars[lang].update(Translator.processes.EXTRACT_JSON, { lang, step: 'EXTRACT_JSON' })
+      await sleep(200)
+      let content
+
+      let match = rawText[lang].match(/\{[\s\S]*\}/)
+      if (match) {
+        content = match[0]
+        try {
+          content = JSON5.parse(content)
+        }
+        catch (error) {
+          content = null
+        }
+      }
+      else {
+        match = rawText[lang].match(/```json\n([\s\S]*?)\n```/)
+        if (match) {
+          content = match[1]
+
+          try {
+            content = JSON5.parse(content)
+          }
+          catch (error) {
+            content = null
+          }
+        }
+        else {
+          content = null
+        }
+      }
+
+      this.translatedContent[lang] = content
+    })
+
+    this.state = 'SAVE_FILE'
+  }
+
+  protected saveTranslatedFile() {
+    this.languages.forEach(async (lang) => {
+      this.progressBars[lang].update(Translator.processes.SAVE_FILE, { lang, step: 'SAVE_FILE' })
+      await sleep(200)
+      const filePath = path.join(this.outputDir, `lang.${lang}.json`)
+      Translator.writeJsonFile(filePath, this.translatedContent[lang])
+
+      await sleep(200)
+      this.progressBars[lang].update(Translator.processes.DONE, { lang, step: 'DONE' })
+      this.progressBars[lang].stop()
+    })
+    this.state = 'DONE'
   }
 }

@@ -1,8 +1,9 @@
 import antfu from '@antfu/eslint-config'
 
 export default antfu({
-    rules: {
-        'no-console': 'off'
-    },
-    formatters: {},
+  rules: {
+    'no-console': 'off',
+    'import/order': 'off',
+  },
+  formatters: {},
 })

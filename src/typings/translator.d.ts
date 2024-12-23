@@ -68,10 +68,6 @@ namespace Translator {
 
   export interface Config {
     apiKey: string
-    apiEndpoint: string
-    requestMethod?: string
-    requestDataFunc: RequestDataFunc | null
-    responseHandler: ResponseHandler | null
     languages: Language[] | []
     inputFilePath: string
     outputDir: string
