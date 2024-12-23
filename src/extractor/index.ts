@@ -1,9 +1,9 @@
+import { logger } from '@shermant/logger'
+import chalk from 'chalk'
+import cliProgress from 'cli-progress'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import chalk from 'chalk'
-import { logger } from '@shermant/logger'
-import cliProgress from 'cli-progress'
-import { sleep } from './utils.ts'
+import { sleep } from '../utils.ts'
 
 export class Extractor {
   private state: Extractor.State = 'INIT'

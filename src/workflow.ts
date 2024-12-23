@@ -1,10 +1,10 @@
+/* eslint-disable import/order */
+import { logger } from '@shermant/logger'
+import chalk from 'chalk'
+import * as chokidar from 'chokidar'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as process from 'node:process'
-import chalk from 'chalk'
-import { logger } from '@shermant/logger'
-import * as chokidar from 'chokidar'
-import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
 import {
   defaultSettings,
   getSettingFromCommand,
@@ -12,10 +12,10 @@ import {
   getSettingFromInquirer,
   standardizeOptions,
   validateSettings,
-} from './setting.ts'
-import { Extractor } from './extractor.ts'
-import { DeepseekTranslator } from './providers/deepseek.ts'
-import { OpenAITranslator } from './providers/openai.ts'
+} from './configurator/index.ts'
+import { Extractor } from './extractor/index.ts'
+import { OpenAITranslator } from './translator/providers/openai.ts'
+import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -237,16 +237,16 @@ ${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `
     if (!this.finalSettings.key) {
       logger.error.tag('check API key').message(`Key is not provided`).print()
     }
-    const providerMap = new Map([
-      ['deepseek', DeepseekTranslator],
+    const providerMap = new Map<string, new (apiKey: string, inputFilePath: string) => OpenAITranslator>([
       ['openai', OpenAITranslator],
+      ['deepseek', OpenAITranslator],
     ])
     const Provider = providerMap.get(this.finalSettings.provider)
     if (!Provider) {
       logger.error.tag('load translate provider').message(`Provider [[${this.finalSettings.provider}]] not found`).appendDivider('-').print()
       return
     }
-    const translator = new (Provider)(this.finalSettings.key, this.finalSettings.output)
+    const translator = new Provider(this.finalSettings.key, this.finalSettings.output)
     await translator.run(this.finalSettings.languages)
   }
 }
