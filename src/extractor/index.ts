@@ -1,17 +1,13 @@
-import { logger } from '@shermant/logger'
 import chalk from 'chalk'
-import cliProgress from 'cli-progress'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { sleep } from '../utils.ts'
+import type { Spinner } from '../spinner'
 
 export class Extractor {
   private state: Extractor.State = 'INIT'
   private context: Extractor.Context
-  private verboseMode: boolean = true
-  private progressBar: cliProgress.SingleBar
 
-  constructor(private pattern: RegExp, private directory: string, private extensions: string[]) {
+  constructor(private pattern: RegExp, private directory: string, private extensions: string[], private spinner: Spinner) {
     this.context = {
       keys: [],
       files: [],
@@ -19,16 +15,6 @@ export class Extractor {
       currentFindKeys: [],
       currentContent: '',
     }
-    this.progressBar = new cliProgress.SingleBar({
-      format: `|${chalk.cyan('{bar}')}| {percentage}% | {value}/{total} Files | CurrentFile: {file}`,
-      barCompleteChar: '\u2588',
-      barIncompleteChar: '\u2591',
-      hideCursor: true,
-    })
-  }
-
-  setVerboseMode(mode: boolean) {
-    this.verboseMode = mode
   }
 
   async run() {
@@ -56,23 +42,27 @@ export class Extractor {
     for (const file of files) {
       const filePath: string = path.resolve(dir, file.name)
       if (file.isDirectory()) {
-        logger.info.tag(' Traversing ').message(`Walk into directory ${chalk.underline.yellow(filePath)}`).appendDivider('-').print(this.verboseMode)
+        this.spinner
+          .setText(`Walk into directory ${chalk.underline.yellow(filePath)}`)
+          .setDelay(300)
+          .update()
         fileList = await this.walk(filePath, extensions, fileList)
       }
       else if (extensions.includes(path.extname(file.name))) {
-        // logger.info.tag(' Traversing ').message(`Add file ${chalk.underline.yellow(file.name)} to process list`).print(this.verboseMode)
+        this.spinner
+          .setText(`Add file ${chalk.underline.yellow(file.name)} to process list`)
+          .setDelay(300)
+          .update()
         fileList.push(filePath)
       }
     }
+
     return fileList
   }
 
   private async init() {
     this.context.files = await this.walk(this.directory, this.extensions, [])
     this.state = this.context.files.length > 0 ? 'READ_FILE' : 'DONE'
-    this.progressBar.start(this.context.files.length, 0, {
-      file: 'N/A',
-    })
   }
 
   private async readFile() {
@@ -85,7 +75,10 @@ export class Extractor {
     this.context.currentContent = await fs.readFile(filePath, 'utf-8')
     this.state = 'PROCESS_CONTENT'
 
-    // logger.info.tag('processing').message(`Scan keys from [[${filePath}]]`).print(this.verboseMode)
+    this.spinner
+      .setText(`Scan keys from ${chalk.underline.yellow(filePath)}`)
+      .setDelay(500)
+      .update()
   }
 
   private processContent() {
@@ -104,32 +97,23 @@ export class Extractor {
   }
 
   private async logResults() {
-    // const currentFindKeys = this.context.currentFindKeys
+    const currentFindKeys = this.context.currentFindKeys
 
-    // if (currentFindKeys.length > 0) {
-    //   logger.success.tag('Locating').message(`Find key: ${
-    //             currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
-    //         }`).print(this.verboseMode)
-    // }
-    // else if (this.context.currentContent) {
-    //   logger.info.tag('Locating').message(`No matched key`).print(this.verboseMode)
-    // }
-    // else {
-    //   logger.warn.tag('check file').message(`The file is empty`).print(this.verboseMode)
-    // }
-
-    this.progressBar.update(this.context.currentFileIndex + 1, {
-      file: this.context.files[this.context.currentFileIndex],
-    })
-
-    await sleep(10)
-
-    if (this.context.currentFileIndex >= this.context.files.length) {
-      this.progressBar.update(this.context.files.length, {
-        file: 'done',
-      })
-      this.progressBar.stop()
+    if (currentFindKeys.length > 0) {
+      this.spinner
+        .setText(`Find key: ${
+                currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
+            }`)
+        .setDelay(300)
+        .update()
     }
+    else if (this.context.currentContent) {
+      this.spinner.setText(`No matched key`).setDelay(300).update()
+    }
+    else {
+      this.spinner.setText(`The file is empty`).setDelay(300).update()
+    }
+
     this.context.currentFileIndex += 1
     this.state = 'READ_FILE'
   }

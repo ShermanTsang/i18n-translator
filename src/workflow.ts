@@ -13,10 +13,11 @@ import {
   validateSettings,
 } from './configurator/index.ts'
 import { Extractor } from './extractor/index.ts'
-
-import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
+import { Spinner } from './spinner.ts'
 import type { Translator as TranslatorProvider } from './translator/index.ts'
+import { Translator } from './translator/index.ts'
 import { DeepSeekTranslator, OpenAITranslator } from './translator/providers.ts'
+import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -32,75 +33,100 @@ export class Workflow {
     this.sortedKeys = []
   }
 
-  welcomeState() {
-    logger.info.prependDivider('#').appendDivider('#').message(`
-    
-    👋 Hi, this is a tool named @shermant/[[i18n-translator]]
-    😉 This tool can help you [[extract]] and [[translate]] i18n text.
-    
-    `, ['green']).print()
-  }
-
   async run() {
-    this.welcomeState()
-    await sleep(2000)
     await this.initState()
-    await sleep(500)
     await this.getSettingsState()
-    await sleep(1000)
     await this.validateSettingsState()
-    await sleep(1000)
-    await this.completeSettingsState()
-    await sleep(1000)
-    this.finalizeSettingsState()
+    await this.finalizeSettingsState()
 
     if (this.finalSettings.tasks.includes('extract')) {
-      await sleep(1000)
       await this.extractKeysState()
       this.saveResultState()
     }
 
     if (this.finalSettings.tasks.includes('translate')) {
-      await sleep(1000)
       await this.translateFilesState()
     }
 
     if (this.finalSettings.watch) {
-      logger.info.tag('launch monitor').time(true).prependDivider('-').message(`file watcher will start within [[5]] seconds`).print()
-      await sleep(5000)
+      const spinner = new Spinner('file watcher', '👁️')
+      let counter = 5
+      const countdown = setInterval(async () => {
+        if (counter === 0) {
+          await spinner.setState('stop').update()
+          clearInterval(countdown)
+          return
+        }
+        await spinner.setText(`file watcher will start within [[${counter}]] seconds`).update()
+        counter--
+      }, 1000)
+
       this.setupFileWatcher()
     }
   }
 
   async initState() {
-    logger.info.tag('load default settings').appendDivider('-').message('read default setting').print()
+    const spinner = new Spinner('init program', '🙌')
+
+    await spinner
+      .setText(`
+
+      👋 Hi, this is a tool named @shermant/[[i18n-translator]]
+      😉 This tool can help you [[extract]] and [[translate]] i18n text. 
+      
+      `)
+      .setDelay(2000)
+      .setColor('yellow')
+      .update()
+
+    await spinner
+      .setText(`init workflow succeed`)
+      .setState('succeed')
+      .update()
   }
 
   async getSettingsState() {
     const { options: settingsFromCommand, hasConfig: hasConfigFromCommand } = getSettingFromCommand()
-    if (hasConfigFromCommand) {
-      logger.info.tag('read settings').appendDivider('-').message(`parsing setting options from [[command line]]
-      
-${Object.entries(settingsFromCommand).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}
 
-`).print()
+    const spinner = new Spinner('read settings', '⚙️')
+    await spinner
+      .setText('start reading settings')
+      .setDelay(1000)
+      .setColor('yellow')
+      .update()
+
+    if (hasConfigFromCommand) {
+      await spinner
+        .setText(`parsing setting options from [[command line]]`)
+        .setDetail(`${Object.entries(settingsFromCommand).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`)
+        .setDelay(1000)
+        .setColor('yellow')
+        .update()
     }
     else {
-      logger.info.tag('read settings').appendDivider('-').message('no setting options found in [[command line]]').print()
+      await spinner
+        .setText(`parsing setting options from [[command line]]`)
+        .setDetail('no setting options found in command line')
+        .setDelay(1000)
+        .setColor('red')
+        .update()
     }
-
-    await sleep(1000)
 
     const { options: settingsFromEnv, hasConfig: hasConfigFromEnv } = getSettingFromEnv(this.defaultSettings.env)
     if (hasConfigFromEnv) {
-      logger.info.tag('read settings').appendDivider('-').message(`reading setting options from [[.env]] file\
-      
-${Object.entries(settingsFromEnv).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}
-
-`).print()
+      await spinner
+        .setColor('yellow')
+        .setText('parsing setting options from [[.env]] file')
+        .setDetail(`${Object.entries(settingsFromEnv).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`)
+        .update()
     }
     else {
-      logger.info.tag('read settings').appendDivider('-').message('no setting options found in [[.env]] file').print()
+      await spinner
+        .setColor('red')
+        .setText('parsing setting options from [[.env]] file')
+        .setDetail('no setting options found in .env file')
+        .setState('fail')
+        .update()
     }
 
     this.mergedSettings = {
@@ -109,20 +135,30 @@ ${Object.entries(settingsFromEnv).map(([key, value]) => `🔸 [[${key}]]  ${valu
       ...settingsFromCommand,
     }
 
-    await sleep(1000)
+    const mergedSettings = `
+[[notice]]: the settings in [[command line]] will [[override]] the settings in [[.env file]]
+${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`
 
-    logger.info.tag('merge settings').appendDivider('-')
-      .message(`merging settings from [[command line]] and [[.env file]],
-       
-${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}
-
-‼️notice‼️ the settings in [[command line]] will [[override]] the settings in [[.env file]]`)
-      .print()
+    await spinner
+      .setText(`merging settings from [[command line]] and [[.env file]]`)
+      .setDetail(mergedSettings)
+      .setDelay(2000)
+      .setColor('yellow')
+      .setState('succeed')
+      .update()
   }
 
   async validateSettingsState() {
     const { unset: unsetSettings, invalid: invalidSettings } = validateSettings(this.mergedSettings)
     this.needToCompleteSettings = Array.from(new Set([...unsetSettings, ...invalidSettings]))
+
+    const spinner = new Spinner('validate settings', '✍️')
+
+    await spinner
+      .setText('start validating settings')
+      .setDelay(1000)
+      .setColor('yellow')
+      .update()
 
     if (this.mergedSettings.tasks && this.mergedSettings.tasks.length > 0) {
       if (!this.mergedSettings.tasks.includes('extract')) {
@@ -135,14 +171,20 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
     }
 
     if (this.needToCompleteSettings.length > 0) {
-      logger.error.tag('validate settings').appendDivider('-')
-        .message(`👋 please provide the following settings :      
+      await spinner
+        .setText('👋 please provide the following settings')
+        .setDetail(`🔸 missing settings: ${unsetSettings.length > 0 ? (`${unsetSettings.map(text => `[[${text}]]`).join(' ')}`) : 'none'}\n🔸 invalid settings: ${invalidSettings.length > 0 ? (`${invalidSettings.map(text => `[[${text}]]`).join(' ')}`) : 'none'}`)
+        .setState('succeed')
+        .update()
 
-🔸 missing settings: ${unsetSettings.length > 0 ? (`${unsetSettings.map(text => `[[${text}]]`).join(' ')}`) : 'none'}
-🔸 invalid settings: ${invalidSettings.length > 0 ? (`${invalidSettings.map(text => `[[${text}]]`).join(' ')}`) : 'none'}
-
-‼️notice‼️️ program will flow into [[inquirer process]] to complete them`)
-        .print()
+      await this.completeSettingsState()
+    }
+    else {
+      await spinner
+        .setText('all required settings are complete')
+        .setState('succeed')
+        .setDelay(1000)
+        .update()
     }
   }
 
@@ -162,81 +204,114 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
     }
   }
 
-  finalizeSettingsState() {
+  async finalizeSettingsState() {
+    const spinner = new Spinner('finalize settings', '📌')
+    await spinner.setText('start finalizing settings').setDelay(1500).setColor('yellow').update()
     this.finalSettings = standardizeOptions(this.mergedSettings as Setting.InputOptions)
-    logger.info.tag('confirm final settings').message(`the final settings as following
-    
-${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}
-
-`).prependDivider('-').appendDivider('-').print()
+    await spinner.setText('the final settings as following').setDetail(`${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`).setDelay(1000).setState('succeed').update()
   }
 
-  async extractKeysState(verboseMode = true) {
+  async extractKeysState() {
+    const spinner = new Spinner('extract keys', '🔎')
+    await spinner.setText('start extracting keys').setDelay(1000).setDetail(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).update()
+
     try {
       let allKeys: any[] = []
-      logger.info.tag('launch scan').message(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).print(verboseMode)
       for (const dirPath of this.finalSettings.dirs) {
-        const extractor = new Extractor(this.finalSettings.pattern, dirPath, this.finalSettings.exts)
-        extractor.setVerboseMode(verboseMode)
+        const extractor = new Extractor(
+          this.finalSettings.pattern,
+          dirPath,
+          this.finalSettings.exts,
+          spinner,
+        )
         const keys = await extractor.run()
         allKeys = allKeys.concat(keys)
         await sleep(1000)
       }
       this.sortedKeys = allKeys.sort()
-      console.log(`\n`)
-      logger.info.tag('report result').message(`🥳 Found [[${this.sortedKeys.length}]] keys in total`).appendDivider().print()
-      if (this.sortedKeys.length > 0) {
-        logger.success.tag('list keys').message(`👉 Extracted keys list:
-${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `[[${item}]]`).join(' / ')}`).join('\n')}
-      \n`,
-        ).appendDivider().print()
-      }
+
+      await spinner
+        .setText(`🥳 Found [[${this.sortedKeys.length || 0}]] keys in total`)
+        .setState('succeed')
+        .setDetail(`${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `[[${item}]]`).join(' / ')}`).join('\n')}`)
+        .setDelay(2000)
+        .update()
     }
     catch (error) {
-      logger.error.tag('extract error').message(`${chalk.bgRed.white(' Error ')} Extracting keys failed:`).data(error).print()
+      await spinner
+        .setText(`👋 something went wrong when extracting keys, please check your settings`)
+        .setState('fail')
+        .update()
       process.exit(1)
     }
   }
 
-  saveResultState() {
+  async saveResultState() {
+    const spinner = new Spinner('save result', '📝')
+    await spinner.setText('start saving result').setDelay(1000).setColor('yellow').update()
     const objectContent = transformArrayToObject(this.sortedKeys)
     try {
       if (!isDirectoryExists(path.dirname(this.finalSettings.output))) {
         fs.mkdirSync(path.dirname(this.finalSettings.output), { recursive: true })
       }
       fs.writeFileSync(this.finalSettings.output, JSON.stringify(objectContent, null, 2))
-      logger.success.tag('save result').message(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`).appendDivider('-').print()
+      await spinner
+        .setText(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`)
+        .setState('succeed')
+        .setDelay(1000)
+        .update()
     }
     catch (error) {
-      logger.error.tag('save result error').message(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed:`).appendDivider('-').print()
+      await spinner
+        .setText(`${chalk.bgRed.white(' Error ')} Writing extracted keys failed.`)
+        .setState('fail')
+        .update()
       process.exit(1)
     }
   }
 
-  setupFileWatcher() {
+  async setupFileWatcher() {
+    console.clear()
+    const spinner = new Spinner('monitor changes', '👁️')
     const watcher = chokidar.watch(this.finalSettings.dirs, {
-      ignored: /(^|[/\\])\../, // ignore dotfiles
+      ignored: /(^|[/\\])\../,
       persistent: true,
     })
 
-    console.log('\n')
-    logger.info.tag('monitor changes').time(true).prependDivider('-').appendDivider('-').message(`👁️Watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`).print()
+    await spinner
+      .setText(`watching for files changes in ${chalk.underline.yellow(this.finalSettings.dirs.join(', '))} ...`)
+      .setColor('yellow')
+      .update()
 
     watcher.on('change', async (path) => {
-      logger.info.tag('detect changes').time(true).message(`file ${chalk.underline.yellow(path)} has been changed`).appendDivider('-').print()
-      this.finalSettings.tasks.includes('extract') && await this.extractKeysState(false)
+      await spinner.setText(`file ${chalk.underline.yellow(path)} has been changed`).setColor('yellow').update()
+      this.finalSettings.tasks.includes('extract') && await this.extractKeysState()
       this.saveResultState()
       this.finalSettings.tasks.includes('translate') && await this.translateFilesState()
     })
 
-    watcher.on('error', (error) => {
-      logger.error.tag('monitor error').time(true).message(`Watcher error: ${error}`).print()
+    watcher.on('error', async (error) => {
+      await spinner
+        .setText(`Watcher error: ${error}`)
+        .setState('fail')
+        .update()
+      process.exit(1)
     })
   }
 
   async translateFilesState() {
+    const spinner = new Spinner('translate files', '🪢')
+
+    await spinner
+      .setText(`the process includes ${Object.keys(Translator.processes).map(process => `[[${String(process).toLowerCase()}]] `).join(' / ')}`)
+      .setDelay(1000)
+      .update()
     if (!this.finalSettings.key) {
-      logger.error.tag('check API key').message(`Key is not provided`).print()
+      await spinner
+        .setText('Key is not provided')
+        .setState('fail')
+        .update()
+      process.exit(1)
     }
     const providerMap = new Map<string, new (apiKey: string, inputFilePath: string) => TranslatorProvider>([
       ['openai', OpenAITranslator],
@@ -244,9 +319,16 @@ ${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `
     ])
     const Provider = providerMap.get(this.finalSettings.provider)
     if (!Provider) {
-      logger.error.tag('load translate provider').message(`Provider [[${this.finalSettings.provider}]] not found`).appendDivider('-').print()
+      await spinner
+        .setText(`Provider [[${this.finalSettings.provider}]] not found`)
+        .setState('fail')
+        .update()
+      process.exit(1)
       return
     }
+
+    await spinner.setState('succeed').update()
+
     const translator = new Provider(this.finalSettings.key, this.finalSettings.output)
     await translator.run(this.finalSettings.languages)
   }

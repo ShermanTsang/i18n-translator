@@ -67,7 +67,7 @@ export abstract class Translator {
 
   protected model!: BaseLanguageModel
 
-  protected static readonly processes = {
+  static readonly processes = {
     AWAIT: 0,
     REQUEST: 1,
     EXTRACT_JSON: 2,
@@ -172,8 +172,6 @@ export abstract class Translator {
 
   async run(languages: Translator.Language[]) {
     this.languages = languages
-
-    logger.info.tag('start translation').message(`🪢  the process includes ${Object.keys(Translator.processes).map(process => `[[${String(process).toLowerCase()}]] `)}`).print()
 
     const multiBar = new cliProgress.MultiBar({
       clearOnComplete: false,

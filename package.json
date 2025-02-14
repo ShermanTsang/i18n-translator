@@ -24,7 +24,7 @@
     "@langchain/community": "^0.3.19",
     "@langchain/core": "^0.3.26",
     "@langchain/openai": "^0.3.16",
-    "@shermant/logger": "^1.1.4",
+    "@shermant/logger": "^1.1.7",
     "@types/cli-progress": "^3.11.6",
     "axios": "^1.7.2",
     "chalk": "^5.3.0",
@@ -33,6 +33,7 @@
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "json5": "^2.2.3",
+    "ora": "^8.1.1",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
