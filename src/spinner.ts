@@ -92,9 +92,9 @@ export class Spinner {
       this.spinner.text = this.text
     }
 
-    // if (this.color) {
-    //   this.spinner.color = this.color
-    // }
+    if (this.color && this.spinner) {
+      this.spinner.color = this.color
+    }
 
     if (this.dealy > 0) {
       await sleep(this.dealy)
