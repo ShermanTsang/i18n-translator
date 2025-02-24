@@ -1,17 +1,31 @@
 import { ChatOpenAI } from '@langchain/openai'
 import { Translator } from '.'
-import { DeepSeekChatModel } from './models'
+import { ChatDeepSeek } from '@langchain/deepseek'
 
-export class DeepSeekTranslator extends Translator {
+export class DeepSeekChatTranslator extends Translator {
   constructor(apiKey: string, inputFilePath: string) {
     super(apiKey, inputFilePath)
     this.initializeModel()
   }
 
   protected initializeModel(): void {
-    this.model = new DeepSeekChatModel({
+    this.model = new ChatDeepSeek({
       apiKey: this.apiKey,
       modelName: 'deepseek-chat',
+    })
+  }
+}
+
+export class DeepSeekReasonerTranslator extends Translator {
+  constructor(apiKey: string, inputFilePath: string) {
+    super(apiKey, inputFilePath)
+    this.initializeModel()
+  }
+
+  protected initializeModel(): void {
+    this.model = new ChatDeepSeek({
+      apiKey: this.apiKey,
+      modelName: 'deepseek-reasoner'
     })
   }
 }

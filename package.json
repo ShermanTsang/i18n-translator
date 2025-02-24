@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@langchain/community": "^0.3.19",
-    "@langchain/core": "^0.3.26",
+    "@langchain/core": "^0.3.40",
+    "@langchain/deepseek": "^0.0.1",
     "@langchain/openai": "^0.3.16",
     "@shermant/logger": "^1.1.7",
     "@types/cli-progress": "^3.11.6",

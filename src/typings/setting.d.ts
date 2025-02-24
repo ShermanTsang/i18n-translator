@@ -49,4 +49,6 @@ namespace Setting {
     unset: Setting.OptionsInputKeysExcept<'env'>[]
     invalid: Setting.OptionsInputKeysExcept<'env'>[]
   }
+
+  export type Provider = 'openai' | 'deepseek-r1' | 'deepseek-v3'
 }

@@ -14,7 +14,7 @@ import { Extractor } from './extractor/index.ts'
 import { Spinner } from './spinner.ts'
 import type { Translator as TranslatorProvider } from './translator/index.ts'
 import { Translator } from './translator/index.ts'
-import { DeepSeekTranslator, OpenAITranslator } from './translator/providers.ts'
+import { DeepSeekReasonerTranslator, DeepSeekChatTranslator, OpenAITranslator } from './translator/providers.ts'
 import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -300,7 +300,8 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
     }
     const providerMap = new Map<string, new (apiKey: string, inputFilePath: string) => TranslatorProvider>([
       ['openai', OpenAITranslator],
-      ['deepseek', DeepSeekTranslator],
+      ['deepseek-reasoner', DeepSeekReasonerTranslator],
+      ['deepseek-chat', DeepSeekChatTranslator],
     ])
     const Provider = providerMap.get(this.finalSettings.provider)
     if (!Provider) {

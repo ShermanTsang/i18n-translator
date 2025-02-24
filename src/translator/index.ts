@@ -10,7 +10,11 @@ import process, { cwd } from 'node:process'
 import { sleep } from '../utils.ts'
 
 export abstract class Translator {
-  static readonly providers = ['deepseek', 'openai']
+  static readonly providers = [
+    'deepseek-chat', 
+    'deepseek-reasoner', 
+    'openai'
+  ]
 
   static readonly languages = {
     'en': 'English',
@@ -60,7 +64,9 @@ export abstract class Translator {
   }
 
   static readonly prompts = ChatPromptTemplate.fromMessages([
-    ['system', 'You are a translator to help user translate the json file written in english to another language, user will input target language and json file content'],
+    ['system', `You are a translator to help user translate the json file from source language to target language.
+      \n User will provide target language and json file content. 
+      \n You need to detect the source language of the json file and translate it to the target language.`],
     ['user', 'Target language is: {language}'],
     ['user', 'Json file content is:\n{content}'],
   ])
