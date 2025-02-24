@@ -44,14 +44,14 @@ export class Extractor {
       if (file.isDirectory()) {
         await this.spinner
           .setText(`Walk into directory ${chalk.underline.yellow(filePath)}`)
-          .setDelay(100)
+          .setDelay(300)
           .update()
         fileList = await this.walk(filePath, extensions, fileList)
       }
       else if (extensions.includes(path.extname(file.name))) {
         await this.spinner
           .setText(`Add file ${chalk.underline.yellow(file.name)} to process list`)
-          .setDelay(100)
+          .setDelay(300)
           .update()
         fileList.push(filePath)
       }
@@ -77,7 +77,7 @@ export class Extractor {
 
     await this.spinner
       .setText(`Scan keys from ${chalk.underline.yellow(filePath)}`)
-      .setDelay(100)
+      .setDelay(300)
       .update()
   }
 
@@ -104,14 +104,14 @@ export class Extractor {
         .setText(`Find key: ${
                 currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
             }`)
-        .setDelay(100)
+        .setDelay(300)
         .update()
     }
     else if (this.context.currentContent) {
-      await this.spinner.setText(`No matched key`).setDelay(100).update()
+      await this.spinner.setText(`No matched key`).setDelay(300).update()
     }
     else {
-      await this.spinner.setText(`The file is empty`).setDelay(100).update()
+      await this.spinner.setText(`The file is empty`).setDelay(300).update()
     }
 
     this.context.currentFileIndex += 1

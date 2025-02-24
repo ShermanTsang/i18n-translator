@@ -63,7 +63,7 @@ export class Workflow {
       😉 This tool can help you [[extract]] and [[translate]] i18n text. 
       
       `)
-      .setDelay(2000)
+      .setDelay(1200)
       .update()
 
     await spinner
@@ -78,7 +78,7 @@ export class Workflow {
     const spinner = new Spinner('read settings', '⚙️')
     await spinner
       .setText('start reading settings')
-      .setDelay(1000)
+      .setDelay(300)
       .setColor('yellow')
       .update()
 
@@ -86,7 +86,7 @@ export class Workflow {
       await spinner
         .setText(`parsing setting options from [[command line]]`)
         .setDetail(`${Object.entries(settingsFromCommand).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`)
-        .setDelay(1000)
+        .setDelay(300)
         .setColor('yellow')
         .update()
     }
@@ -94,7 +94,7 @@ export class Workflow {
       await spinner
         .setText(`parsing setting options from [[command line]]`)
         .setDetail('no setting options found in command line')
-        .setDelay(1000)
+        .setDelay(300)
         .setColor('red')
         .update()
     }
@@ -128,7 +128,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
     await spinner
       .setText(`merging settings from [[command line]] and [[.env file]]`)
       .setDetail(mergedSettings)
-      .setDelay(1000)
+      .setDelay(300)
       .setColor('yellow')
       .setState('succeed')
       .update()
@@ -142,7 +142,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
     await spinner
       .setText('start validating settings')
-      .setDelay(1000)
+      .setDelay(300)
       .setColor('yellow')
       .update()
 
@@ -169,7 +169,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
       await spinner
         .setText('all required settings are complete')
         .setState('succeed')
-        .setDelay(1000)
+        .setDelay(300)
         .update()
     }
   }
@@ -192,14 +192,14 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
   async finalizeSettingsState() {
     const spinner = new Spinner('finalize settings', '📌')
-    await spinner.setText('start finalizing settings').setDelay(1500).setColor('yellow').update()
+    await spinner.setText('start finalizing settings').setDelay(300).setColor('yellow').update()
     this.finalSettings = standardizeOptions(this.mergedSettings as Setting.InputOptions)
-    await spinner.setText('the final settings as following').setDetail(`${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`).setDelay(1000).setState('succeed').update()
+    await spinner.setText('the final settings as following').setDetail(`${Object.entries(this.finalSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`).setDelay(300).setState('succeed').update()
   }
 
   async extractKeysState() {
     const spinner = new Spinner('extract keys', '🔎')
-    await spinner.setText('start extracting keys').setDelay(1000).setDetail(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).update()
+    await spinner.setText('start extracting keys').setDelay(300).setDetail(`Use RegExp ${chalk.underline.yellow(this.finalSettings.pattern)} to match`).update()
 
     try {
       let allKeys: any[] = []
@@ -233,7 +233,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
   async saveResultState() {
     const spinner = new Spinner('save result', '📝')
-    await spinner.setText('start saving result').setDelay(1000).update()
+    await spinner.setText('start saving result').setDelay(300).update()
     const objectContent = transformArrayToObject(this.sortedKeys)
     try {
       if (!isDirectoryExists(path.dirname(this.finalSettings.output))) {
@@ -243,7 +243,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
       await spinner
         .setText(`Extracted keys are written to ${chalk.underline.yellow(this.finalSettings.output)}`)
         .setState('succeed')
-        .setDelay(1000)
+        .setDelay(300)
         .update()
     }
     catch (error) {
@@ -289,7 +289,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
     await spinner
       .setText(`the process includes ${Object.keys(Translator.processes).map(process => `[[${String(process).toLowerCase()}]] `).join(' / ')}`)
-      .setDelay(1000)
+      .setDelay(300)
       .update()
     if (!this.finalSettings.key) {
       await spinner
