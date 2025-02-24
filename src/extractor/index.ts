@@ -42,16 +42,16 @@ export class Extractor {
     for (const file of files) {
       const filePath: string = path.resolve(dir, file.name)
       if (file.isDirectory()) {
-        this.spinner
+        await this.spinner
           .setText(`Walk into directory ${chalk.underline.yellow(filePath)}`)
-          .setDelay(300)
+          .setDelay(100)
           .update()
         fileList = await this.walk(filePath, extensions, fileList)
       }
       else if (extensions.includes(path.extname(file.name))) {
-        this.spinner
+        await this.spinner
           .setText(`Add file ${chalk.underline.yellow(file.name)} to process list`)
-          .setDelay(300)
+          .setDelay(100)
           .update()
         fileList.push(filePath)
       }
@@ -75,9 +75,9 @@ export class Extractor {
     this.context.currentContent = await fs.readFile(filePath, 'utf-8')
     this.state = 'PROCESS_CONTENT'
 
-    this.spinner
+    await this.spinner
       .setText(`Scan keys from ${chalk.underline.yellow(filePath)}`)
-      .setDelay(500)
+      .setDelay(100)
       .update()
   }
 
@@ -100,18 +100,18 @@ export class Extractor {
     const currentFindKeys = this.context.currentFindKeys
 
     if (currentFindKeys.length > 0) {
-      this.spinner
+      await this.spinner
         .setText(`Find key: ${
                 currentFindKeys.map(key => chalk.underline.yellow(key)).join(', ')
             }`)
-        .setDelay(300)
+        .setDelay(100)
         .update()
     }
     else if (this.context.currentContent) {
-      this.spinner.setText(`No matched key`).setDelay(300).update()
+      await this.spinner.setText(`No matched key`).setDelay(100).update()
     }
     else {
-      this.spinner.setText(`The file is empty`).setDelay(300).update()
+      await this.spinner.setText(`The file is empty`).setDelay(100).update()
     }
 
     this.context.currentFileIndex += 1

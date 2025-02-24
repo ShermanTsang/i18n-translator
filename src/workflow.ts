@@ -1,8 +1,6 @@
 import { logger } from '@shermant/logger'
 import chalk from 'chalk'
 import * as chokidar from 'chokidar'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 import * as process from 'node:process'
 import {
   defaultSettings,
@@ -18,6 +16,8 @@ import type { Translator as TranslatorProvider } from './translator/index.ts'
 import { Translator } from './translator/index.ts'
 import { DeepSeekTranslator, OpenAITranslator } from './translator/providers.ts'
 import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
+import path from 'node:path'
+import fs from 'node:fs'
 
 export class Workflow {
   private readonly defaultSettings: Setting.NullableInputOptions
@@ -41,7 +41,7 @@ export class Workflow {
 
     if (this.finalSettings.tasks.includes('extract')) {
       await this.extractKeysState()
-      this.saveResultState()
+      await this.saveResultState()
     }
 
     if (this.finalSettings.tasks.includes('translate')) {
@@ -49,19 +49,7 @@ export class Workflow {
     }
 
     if (this.finalSettings.watch) {
-      const spinner = new Spinner('file watcher', '👁️')
-      let counter = 5
-      const countdown = setInterval(async () => {
-        if (counter === 0) {
-          await spinner.setState('stop').update()
-          clearInterval(countdown)
-          return
-        }
-        await spinner.setText(`file watcher will start within [[${counter}]] seconds`).update()
-        counter--
-      }, 1000)
-
-      this.setupFileWatcher()
+      await this.watchState()
     }
   }
 
@@ -76,7 +64,6 @@ export class Workflow {
       
       `)
       .setDelay(2000)
-      .setColor('yellow')
       .update()
 
     await spinner
@@ -135,14 +122,13 @@ export class Workflow {
       ...settingsFromCommand,
     }
 
-    const mergedSettings = `
-[[notice]]: the settings in [[command line]] will [[override]] the settings in [[.env file]]
+    const mergedSettings = `[[notice]]: the settings in [[command line]] will [[override]] the settings in [[.env file]]
 ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${value}`).join('\n')}`
 
     await spinner
       .setText(`merging settings from [[command line]] and [[.env file]]`)
       .setDetail(mergedSettings)
-      .setDelay(2000)
+      .setDelay(1000)
       .setColor('yellow')
       .setState('succeed')
       .update()
@@ -234,7 +220,6 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
         .setText(`🥳 Found [[${this.sortedKeys.length || 0}]] keys in total`)
         .setState('succeed')
         .setDetail(`${chunkArray(this.sortedKeys, 6).map((chunk: string[]) => `${chunk.map(item => `[[${item}]]`).join(' / ')}`).join('\n')}`)
-        .setDelay(2000)
         .update()
     }
     catch (error) {
@@ -248,7 +233,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
   async saveResultState() {
     const spinner = new Spinner('save result', '📝')
-    await spinner.setText('start saving result').setDelay(1000).setColor('yellow').update()
+    await spinner.setText('start saving result').setDelay(1000).update()
     const objectContent = transformArrayToObject(this.sortedKeys)
     try {
       if (!isDirectoryExists(path.dirname(this.finalSettings.output))) {
@@ -256,7 +241,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
       }
       fs.writeFileSync(this.finalSettings.output, JSON.stringify(objectContent, null, 2))
       await spinner
-        .setText(`Extracted keys written to ${chalk.underline.yellow(this.finalSettings.output)}`)
+        .setText(`Extracted keys are written to ${chalk.underline.yellow(this.finalSettings.output)}`)
         .setState('succeed')
         .setDelay(1000)
         .update()
@@ -272,7 +257,7 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
   async setupFileWatcher() {
     console.clear()
-    const spinner = new Spinner('monitor changes', '👁️')
+    const spinner = new Spinner('watching files changes', '👁️')
     const watcher = chokidar.watch(this.finalSettings.dirs, {
       ignored: /(^|[/\\])\../,
       persistent: true,
@@ -284,9 +269,9 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
       .update()
 
     watcher.on('change', async (path) => {
-      await spinner.setText(`file ${chalk.underline.yellow(path)} has been changed`).setColor('yellow').update()
+      await spinner.setText(`file ${chalk.underline.yellow(path)} has been changed`).setState('succeed').setColor('yellow').update()
       this.finalSettings.tasks.includes('extract') && await this.extractKeysState()
-      this.saveResultState()
+      await this.saveResultState()
       this.finalSettings.tasks.includes('translate') && await this.translateFilesState()
     })
 
@@ -331,5 +316,29 @@ ${Object.entries(this.mergedSettings).map(([key, value]) => `🔸 [[${key}]]  ${
 
     const translator = new Provider(this.finalSettings.key, this.finalSettings.output)
     await translator.run(this.finalSettings.languages)
+  }
+
+  async watchState() {
+    const spinner = new Spinner('file watcher', '👁️')
+
+    await new Promise((resolve) => {
+      let counter = 5
+      const countdown = setInterval(async () => {
+        if (counter === 0) {
+          await spinner.setState('stop').update()
+          clearInterval(countdown)
+          resolve(null)
+          return
+        }
+        await spinner.setText(`
+
+          🤖 file watcher will start within [[${counter}]] seconds
+          
+        `).update()
+        counter--
+      }, 1000)
+    })
+
+    this.setupFileWatcher()
   }
 }

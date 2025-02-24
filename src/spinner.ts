@@ -27,8 +27,8 @@ export class Spinner {
 
     if (this.prefixText) {
       const iconPart = this.stringIcon ? `${this.stringIcon}  ` : ''
-      const textPart = chalk.cyan(`# ${this.capitalize(this.prefixText)} #`)
-      this.spinner.prefixText = this.decorateText(iconPart + textPart)
+      const textPart = chalk.cyan(`[${this.capitalize(this.prefixText)} ${iconPart}]`)
+      this.spinner.prefixText = this.decorateText(textPart)
     }
 
     return this
