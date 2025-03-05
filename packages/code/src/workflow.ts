@@ -15,7 +15,7 @@ import { Spinner } from './spinner.ts'
 import type { Translator as TranslatorProvider } from './translator/index.ts'
 import { Translator } from './translator/index.ts'
 import { DeepSeekReasonerTranslator, DeepSeekChatTranslator, OpenAITranslator } from './translator/providers.ts'
-import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils'
+import { chunkArray, isDirectoryExists, sleep, transformArrayToObject } from './utils.ts'
 import path from 'node:path'
 import fs from 'node:fs'
 

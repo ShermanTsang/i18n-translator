@@ -10,6 +10,14 @@ While developing this project, I aimed to make it user-friendly and versatile fo
 
 If this tool helps you, it would be my pleasure.
 
+## Repository Structure
+
+This project is a [monorepo](https://en.wikipedia.org/wiki/Monorepo).
+
+Packages:
+- `packages/code`: The main package.
+- `packages/preview`: A single web page previewing the translation result built with WebContainer.
+
 ## Feature
 
 - 🤖 Utilize AI services for translation
