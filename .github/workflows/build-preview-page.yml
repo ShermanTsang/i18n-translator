@@ -58,9 +58,9 @@ jobs:
       - name: Download preview artifacts
         uses: actions/download-artifact@v4
         with:
-          include-hidden-files: true
+          run-id: ${{ github.event.workflow_run.id }}
           name: preview-artifacts
-          path: packages/preview/dist
+          path: dist
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
