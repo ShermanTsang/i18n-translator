@@ -5,8 +5,8 @@ name: Build Preview Page
 
 on:
   push:
-    tags:
-      - "*"
+    branches: ["master"]
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
