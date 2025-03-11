@@ -58,9 +58,8 @@ jobs:
       - name: Download preview artifacts
         uses: actions/download-artifact@v4
         with:
-          run-id: ${{ github.event.workflow_run.id }}
           name: preview-artifacts
-          path: dist
+          path: .
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
