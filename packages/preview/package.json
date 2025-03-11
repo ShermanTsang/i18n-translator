@@ -1,20 +1,11 @@
 {
   "name": "@shermant/i18n-translator-preview",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
-  },
-  "devDependencies": {
-    "@antfu/eslint-config": "*",
-    "eslint": "*",
-    "eslint-plugin-format": "*",
-    "prettier": "^3.5.3",
-    "prettier-plugin-tailwindcss": "^0.6.11",
-    "vite": "^4.1.0"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.0.11",
@@ -24,5 +15,13 @@
     "postcss": "^8.5.3",
     "prismjs": "^1.29.0",
     "tailwindcss": "^4.0.9"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "*",
+    "eslint": "*",
+    "eslint-plugin-format": "*",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "vite": "^4.1.0"
   }
 }
