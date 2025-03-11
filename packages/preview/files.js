@@ -5,8 +5,7 @@ export const files = {
         directory: {
             'index.js': {
                 file: {
-                    contents:
-                        `
+                    contents:`
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

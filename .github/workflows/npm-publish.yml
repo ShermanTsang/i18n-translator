@@ -23,7 +23,7 @@ jobs:
         with:
           include-hidden-files: true
           name: build-artifacts
-          path: code/.output
+          path: packages/code/.output
 
   publish-npm:
     needs: build

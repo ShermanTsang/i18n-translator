@@ -1,58 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@shermant/i18n-translator preview</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Keeping custom scrollbar styles as they can't be fully replicated with Tailwind */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+  </head>
 
-        ::-webkit-scrollbar-track {
-            background: #333;
-        }
+  <body class="flex h-screen flex-col bg-[#0a0a0a] font-sans text-white">
+    <header class="flex-shrink-0 border-b border-gray-800 p-6 text-center">
+      <h1 class="text-xl text-[#999]">
+        @shermant /
+        <span
+          class="rounded bg-[#4f46e5] px-2 text-2xl font-semibold text-white shadow-md shadow-indigo-500"
+          >i18n-translator</span
+        >
+        preview
+      </h1>
+    </header>
 
-        ::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4f46e5;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-corner {
-            background: #333;
-        }
-
-        /* Custom animation for loader */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-    </style>
-</head>
-<body class="bg-[#0a0a0a] text-white font-sans min-h-screen flex flex-col">
-
-<header class="p-6 border-b border-gray-800 text-center">
-    <h1 class="text-xl">
-        @shermant / <span class="text-[#4f46e5] font-semibold text-2xl">i18n-translator</span> preview
-    </h1>
-</header>
-
-<div class="flex-1 flex items-center justify-center p-8">
-    <textarea id="textarea" class="w-full max-w-md h-96 mr-4"></textarea>
-    <div class="terminal-container p-2.5 h-96 bg-[#111] border-2 border-[#4f46e5] rounded-lg overflow-hidden">
-        <div id="terminal" class="h-full w-[1400px] overflow-y-auto whitespace-pre-wrap"></div>
+    <div
+      class="flex h-full flex-grow flex-col items-center justify-center gap-8 p-6 lg:flex-row lg:items-start"
+    >
+      <div
+        class="relative h-full w-full border-2 border-[transparent] bg-[#111] transition-all duration-300 hover:border-[#4f46e5]"
+      >
+        <div
+          class="absoulte text-md top-0 right-0 w-full border-b border-gray-800 bg-[#1e1e1e] p-2 text-[#999]"
+        >
+          Code File
+        </div>
+        <div class="code-editor flex flex-col items-center justify-center">
+          <pre class="max-h-[350px] w-full overflow-auto lg:max-h-[600px]">
+            <code id="editor" class="language-javascript block w-full" contenteditable="true" spellcheck="false"></code>
+          </pre>
+        </div>
+      </div>
+      <div
+        class="relative h-full w-full border-2 border-[transparent] bg-[#111] transition-all duration-300 hover:border-[#4f46e5]"
+      >
+        <div
+          class="absoulte text-md top-0 right-0 w-full border-b border-gray-800 bg-[#1e1e1e] p-2 text-[#999]"
+        >
+          Terminal
+        </div>
+        <div class="terminal-container">
+          <div id="terminal" class="h-full overflow-y-auto p-2"></div>
+        </div>
+      </div>
     </div>
-</div>
 
-<script type="module" src="/main.js"></script>
-
-</body>
+    <script type="module" src="/main.js"></script>
+  </body>
 </html>

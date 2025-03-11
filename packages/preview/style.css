@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Keeping custom scrollbar styles as they can't be fully replicated with Tailwind */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #333;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4f46e5;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4f46e5;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-corner {
+    background: #333;
+}
+
+/* Custom animation for loader */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Prism.js customization */
+.code-editor pre[class*="language-"] {
+    margin: 0;
+    padding: 1rem;
+    background: rgb(17, 17, 17);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre;
+    overflow: auto;
+}
+
+.code-editor code[contenteditable="true"] {
+    outline: none;
+    caret-color: #fff;
+    display: block;
+    min-height: 100%;
+    overflow-wrap: normal;
+    word-break: keep-all;
+}
+
+.code-editor .line-numbers .line-numbers-rows {
+    border-right: 1px solid #333;
+}
+
+/* Override Prism.js theme colors to match our theme */
+.code-editor .token.comment,
+.code-editor .token.prolog,
+.code-editor .token.doctype,
+.code-editor .token.cdata {
+    color: #6b7280;
+}
+
+.code-editor .token.punctuation {
+    color: #9ca3af;
+}
+
+.code-editor .token.property,
+.code-editor .token.keyword,
+.code-editor .token.tag {
+    color: #4f46e5;
+}
+
+.code-editor .token.string {
+    color: #10b981;
+}
+
+.code-editor .token.number {
+    color: #f59e0b;
+}
+
+.code-editor .token.boolean {
+    color: #3b82f6;
+}
+
+.code-editor .token.null,
+.code-editor .token.undefined {
+    color: #dc2626;
+}

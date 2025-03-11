@@ -1,5 +1,5 @@
 {
-  "name": "webcontainers-api-starter",
+  "name": "@shermant/i18n-translator-preview",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,14 +9,20 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^4.1.0",
     "@antfu/eslint-config": "*",
     "eslint": "*",
-    "eslint-plugin-format": "*"
+    "eslint-plugin-format": "*",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "vite": "^4.1.0"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.0.11",
     "@webcontainer/api": "^1.1.3",
+    "@xterm/addon-fit": "latest",
     "@xterm/xterm": "latest",
-    "@xterm/addon-fit": "latest"
+    "postcss": "^8.5.3",
+    "prismjs": "^1.29.0",
+    "tailwindcss": "^4.0.9"
   }
 }
