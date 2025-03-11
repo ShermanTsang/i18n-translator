@@ -6,6 +6,8 @@ name: Build Preview Page
 on:
   push:
     branches: ["master"]
+    paths:
+      - "packages/preview/**"
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

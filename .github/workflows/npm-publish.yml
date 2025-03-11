@@ -6,7 +6,9 @@ name: Publish NPM package
 on:
   push:
     tags:
-      - '*'
+      - "*"
+    paths:
+      - "packages/code/**"
 
 jobs:
   build:
@@ -14,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
+      - run: cd packages/code
       - run: bun install
       - run: bun run build
       - run: pwd
