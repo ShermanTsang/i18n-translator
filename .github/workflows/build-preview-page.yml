@@ -27,12 +27,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/preview
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
-      - run: cd packages/preview
       - run: bun install
-      - run: bun vite build
+      - run: bun run build
       - name: Upload preview artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,6 +47,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/preview
     steps:
       - name: Checkout
         uses: actions/checkout@v4

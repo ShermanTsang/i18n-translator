@@ -13,10 +13,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/code
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
-      - run: cd packages/code
       - run: bun install
       - run: bun run build
       - run: pwd
@@ -31,6 +33,9 @@ jobs:
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/code
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
