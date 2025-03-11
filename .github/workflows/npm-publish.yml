@@ -40,7 +40,7 @@ jobs:
         with:
           include-hidden-files: true
           name: build-artifacts
-          path: .output
+          path: packages/code/.output
       - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
