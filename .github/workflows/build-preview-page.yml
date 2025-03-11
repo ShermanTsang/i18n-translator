@@ -37,10 +37,14 @@ jobs:
           path: packages/preview/dist
 
   deploy:
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/preview
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,9 +53,8 @@ jobs:
       - name: Download preview artifacts
         uses: actions/download-artifact@v4
         with:
-          include-hidden-files: true
           name: preview-artifacts
-          path: packages/preview/dist
+          path: dist
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
