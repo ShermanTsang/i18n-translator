@@ -18,12 +18,12 @@ function initCodeEditor() {
   updateHighlighting(editor.textContent);
 
   // Handle input with debouncing to prevent cursor jumping
-  let timeout;
-  editor.addEventListener("input", () => {
+  editor.addEventListener("input", async () => {
     if (isComposing) return;
 
     const content = editor.textContent;
-    writeIndexJS(content);
+    // Ensure file is written synchronously before continuing
+    await writeIndexJS(content);
 
     // Capture selection state before updating
     const selection = saveSelection(editor);
@@ -40,10 +40,12 @@ function initCodeEditor() {
     isComposing = true;
   });
 
-  editor.addEventListener("compositionend", () => {
+  editor.addEventListener("compositionend", async () => {
     isComposing = false;
     const content = editor.textContent;
-    writeIndexJS(content);
+
+    // Ensure file is written synchronously before continuing
+    await writeIndexJS(content);
 
     const selection = saveSelection(editor);
     updateHighlighting(content);
@@ -51,13 +53,14 @@ function initCodeEditor() {
   });
 
   // Handle tab key for indentation
-  editor.addEventListener("keydown", (e) => {
+  editor.addEventListener("keydown", async (e) => {
     if (e.key === "Tab") {
       e.preventDefault();
       document.execCommand("insertText", false, "    ");
 
       const content = editor.textContent;
-      writeIndexJS(content);
+      // Ensure file is written synchronously before continuing
+      await writeIndexJS(content);
 
       const selection = saveSelection(editor);
       updateHighlighting(content);
@@ -166,7 +169,15 @@ function updateHighlighting(content) {
 }
 
 async function writeIndexJS(content) {
-  await webContainerInstance.fs.writeFile("/example/index.js", content);
+  try {
+    // Make sure we wait for the write operation to complete
+    await webContainerInstance.fs.writeFile("/example/index.js", content);
+    console.log("Successfully updated /example/index.js");
+    return true;
+  } catch (error) {
+    console.error("Error writing to file:", error);
+    return false;
+  }
 }
 
 async function initTerminal() {
