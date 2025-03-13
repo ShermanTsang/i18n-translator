@@ -6,6 +6,10 @@
 
 A web-based preview and testing environment for the i18n-translator package.
 
+**[🔗 Try the Online Preview](https://i18n-translator.netlify.app/)**
+
+![Preview of i18n-translator in action](./preview.gif)
+
 ## Overview
 
 This package provides an interactive browser-based playground for testing and previewing React components that use the i18n-translator library. It features:

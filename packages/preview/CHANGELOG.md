@@ -1,5 +1,11 @@
 # @shermant/i18n-translator-preview
 
+## 1.0.3
+
+### Patch Changes
+
+- Complete README file
+
 ## 1.0.2
 
 ### Patch Changes

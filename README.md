@@ -18,6 +18,12 @@ I initially created this translation tool for one of my other projects to reduce
 While developing this project, I aimed to make it user-friendly and versatile for general i18n use cases.
 If this tool helps you, it would be my pleasure.
 
+## 📝 Preview
+
+[Online Preview](https://i18n-translator.netlify.app/)
+
+![Preview of i18n-translator in action](./packages/preview/preview.gif)
+
 ## 📋 Table of Contents
 
 - [Features](#-features)

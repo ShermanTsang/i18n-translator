@@ -1,6 +1,3 @@
-# This extractor.d.ts will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
 name: Publish NPM package
 
 on:
@@ -49,6 +46,10 @@ jobs:
           include-hidden-files: true
           name: build-artifacts
           path: packages/code/.output
+      - name: Copy README.md from root
+        run: |
+          cp $GITHUB_WORKSPACE/README.md ./README.md
+          cp $GITHUB_WORKSPACE/README.zh.md ./README.zh.md
       - run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
