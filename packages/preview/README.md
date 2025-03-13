@@ -1,5 +1,7 @@
 # @shermant/i18n-translator Preview
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/0b28abb1-1b21-438d-9b9c-9e4ec0d60cce/deploy-status)](https://app.netlify.com/sites/i18n-translator/deploys)
+
 [English](./README.md) | [中文](./README.zh.md)
 
 A web-based preview and testing environment for the i18n-translator package.

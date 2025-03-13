@@ -1,5 +1,11 @@
 # @shermant/i18n-translator-preview
 
+## 1.0.2
+
+### Patch Changes
+
+- Append \_headers file for build artifact
+
 ## 1.0.1
 
 ### Minor Changes

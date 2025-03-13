@@ -5,6 +5,7 @@
 [![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/ShermanTsang/i18n-translator?label=version)](https://github.com/ShermanTsang/i18n-translator/releases)
 [![Build Status](https://github.com/ShermanTsang/i18n-translator/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/ShermanTsang/i18n-translator/actions/workflows/npm-publish.yml)
 [![npm](https://img.shields.io/npm/dt/@shermant/i18n-translator)](https://www.npmjs.com/package/@shermant/i18n-translator)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/0b28abb1-1b21-438d-9b9c-9e4ec0d60cce/deploy-status)](https://app.netlify.com/sites/i18n-translator/deploys)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **English** | [中文](./README.zh.md)

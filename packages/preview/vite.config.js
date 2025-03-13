@@ -1,12 +1,11 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: './',
-  plugins: [],
+  base: "./",
   server: {
     headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
     },
     hmr: {
       // Force full page reload when Tailwind classes change
@@ -14,4 +13,4 @@ export default defineConfig({
       overlay: true,
     },
   },
-})
+});
