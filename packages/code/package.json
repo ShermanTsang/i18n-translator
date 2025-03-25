@@ -16,7 +16,6 @@
     "bun": ">=1.0.0"
   },
   "scripts": {
-    "install": "bun install",
     "start": "node --loader=ts-node/esm src/index.ts --pattern=tttt --exts vue js --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bun build ./src/index.ts --outdir ./.output/dist --target node && tsc"
@@ -27,7 +26,6 @@
     "@langchain/deepseek": "^0.0.1",
     "@langchain/openai": "^0.3.16",
     "@shermant/logger": "^1.1.7",
-    "@types/cli-progress": "^3.11.6",
     "axios": "^1.7.2",
     "chalk": "^5.3.0",
     "chokidar": "^3.6.0",
@@ -42,6 +40,7 @@
     "@antfu/eslint-config": "*",
     "@types/axios": "^0.14.0",
     "@types/bun": "^1.1.4",
+    "@types/cli-progress": "^3.11.6",
     "@types/node": "^20.14.2",
     "@types/prompts": "^2.4.9",
     "eslint": "*",
