@@ -1,5 +1,11 @@
 # @shermant/i18n-translator-preview
 
+## 1.0.4
+
+### Patch Changes
+
+- fix: fix style bug
+
 ## 1.0.3
 
 ### Patch Changes
