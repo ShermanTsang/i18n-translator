@@ -9,10 +9,10 @@ import {
     getSettingFromInquirer,
     standardizeOptions,
     validateSettings,
-} from './configurator/index.ts'
-import {Extractor} from './extractor/index.ts'
+} from './configurator'
+import {Extractor} from './extractor'
 import type {Translator as TranslatorProvider} from './translator/index.ts'
-import {Translator} from './translator/index.ts'
+import {Translator} from './translator'
 import {DeepSeekChatTranslator, DeepSeekReasonerTranslator, OpenAITranslator} from './translator/providers.ts'
 import {chunkArray, isDirectoryExists, sleep, transformArrayToObject} from './utils.ts'
 import path from 'node:path'
@@ -75,7 +75,7 @@ export class Workflow {
         await spinner
             .text('start reading settings')
             .delay(300)
-            .update()
+            .asyncUpdate()
 
         if (hasConfigFromCommand) {
             await spinner
