@@ -4,7 +4,7 @@
     "": {
       "name": "@shermant/i18n-translator",
       "dependencies": {
-        "@shermant/logger": "^1.1.10",
+        "@shermant/logger": "^1.2.2",
       },
       "devDependencies": {
         "@antfu/eslint-config": "^4.8.1",
@@ -15,16 +15,16 @@
     },
     "packages/code": {
       "name": "@shermant/i18n-translator",
-      "version": "1.3.3",
+      "version": "1.3.4",
       "bin": {
-        "i18n-translator": "bin/index.js"
+        "i18n-translator": "bin/index.js",
       },
       "dependencies": {
         "@langchain/community": "^0.3.19",
         "@langchain/core": "^0.3.40",
         "@langchain/deepseek": "^0.0.1",
         "@langchain/openai": "^0.3.16",
-        "@shermant/logger": "^1.1.8",
+        "@shermant/logger": "^1.2.2",
         "axios": "^1.7.2",
         "chalk": "^5.3.0",
         "chokidar": "^3.6.0",
@@ -50,7 +50,7 @@
     },
     "packages/preview": {
       "name": "@shermant/i18n-translator-preview",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "dependencies": {
         "@tailwindcss/postcss": "^4.0.11",
         "@webcontainer/api": "^1.1.3",
@@ -257,7 +257,7 @@
 
     "@shermant/i18n-translator-preview": ["@shermant/i18n-translator-preview@workspace:packages/preview"],
 
-    "@shermant/logger": ["@shermant/logger@1.1.10", "https://registry.npmmirror.com/@shermant/logger/-/logger-1.1.10.tgz", { "dependencies": { "chalk": "^5.3.0", "ora": "^8.2.0" } }, "sha512-efz/+2n/Rkl96pKtADtPTBTiOCrfYYjPpui+N0T3ntJ+ZirkVcyrWrenMR9Aa6dUmJSUTB0kTH4IPbwxJa9h0g=="],
+    "@shermant/logger": ["@shermant/logger@1.2.2", "", { "optionalDependencies": { "chalk": "^5.3.0", "ora": "^8.2.0" } }, "sha512-BOR18ltNAzZ1D/KXAF2gNvd49GOKZm0NI8mXibBD93fejap8eh3J4p98dGk5NspGzYk5qLYR5CIVcLSARtWjfw=="],
 
     "@stylistic/eslint-plugin": ["@stylistic/eslint-plugin@4.2.0", "https://registry.npmmirror.com/@stylistic/eslint-plugin/-/eslint-plugin-4.2.0.tgz", { "dependencies": { "@typescript-eslint/utils": "^8.23.0", "eslint-visitor-keys": "^4.2.0", "espree": "^10.3.0", "estraverse": "^5.3.0", "picomatch": "^4.0.2" }, "peerDependencies": { "eslint": ">=9.0.0" } }, "sha512-8hXezgz7jexGHdo5WN6JBEIPHCSFyyU4vgbxevu4YLVS5vl+sxqAAGyXSzfNDyR6xMNSH5H1x67nsXcYMOHtZA=="],
 
